@@ -3,7 +3,7 @@
     Description: Test bench for border_generator module
 */
 
-`timescale 1ms / 100us
+`timescale 1ns / 10ps
 
 module tb_border_generator ();
 

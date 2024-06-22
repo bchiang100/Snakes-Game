@@ -3,7 +3,7 @@
     Description: Test bench for snakes sequential modules
 */
 
-`timescale 1ms / 100us
+`timescale 1ns / 10ps
 
 module tb_snakes_template ();
 
