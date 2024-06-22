@@ -3,38 +3,26 @@ typedef enum logic {
     ON = 1'b1
 } MODE_TYPES;
 
-module sound_fsm(
-    input logic clk, nRst, goodColl, badColl, button,
-    input logic [3:0] direction,
-    output logic playSound,
-    output MODE_TYPES mode_o // current state
+module sound_generator
+#(
+    parameter N = 8
+)
+(
+    input logic clk, nRst, goodColl_i, badColl_i, button_i,
+    input logic [3:0] direction_i,
+    output logic [N - 1:0] dacCount
 );
-MODE_TYPES next_state;
 
-always_ff @(posedge clk, negedge nRst) begin
-    if (~nRst) begin
-        mode_o <= ON;
-    end else begin
-        mode_o <= next_state;
-    end
-end
+logic [8:0] freq;
+logic goodColl, badColl, button;
+logic [3:0] direction;
+logic playSound;
+logic at_max;
+MODE_TYPES mode_o;
 
-always_comb begin
-    playSound = 1'b0;
-    next_state = mode_o;
-    case (mode_o)
-        ON:
-            if (button) begin
-                next_state = OFF;
-            end
-            else if (goodColl || badColl || |direction) begin
-                playSound = 1'b1;
-            end
-        OFF:
-            if (button) begin
-                next_state = ON;
-            end
-    endcase
-end
-
+pos_detector posDet (.goodColl(goodColl), .badColl(badColl), .button(button), .direction(direction), .clk(clk), .nRst(nRst), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .button_i(button_i), .direction_i(direction_i));
+freq_selector freqSel (.freq(freq), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .direction_i(direction_i));
+sound_fsm fsm (.playSound(playSound), .mode_o(mode_o), .clk(clk), .nRst(nRst), .goodColl(goodColl), .badColl(badColl), .button(button), .direction(direction));
+oscillator osc (.at_max(at_max), .clk(clk), .nRst(nRst), .freq(freq), .state(mode_o), .playSound(playSound));
+dac_counter dac (.dacCount(dacCount), .clk(clk), .nRst(nRst), .at_max(at_max));
 endmodule
