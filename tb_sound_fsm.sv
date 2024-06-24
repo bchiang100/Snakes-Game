@@ -40,9 +40,9 @@ module tb_sound_fsm ();
     task single_button_press;
     begin
         @(negedge tb_clk);
-        tb_button_i = 1'b1; 
+        tb_button = 1'b1; 
         @(negedge tb_clk);
-        tb_button_i = 1'b0; 
+        tb_button = 1'b0; 
         @(posedge tb_clk);  // Task ends in rising edge of clock: remember this!
     end
     endtask
@@ -60,7 +60,7 @@ module tb_sound_fsm ();
             $error("Incorrect mode. Expected: %s. Actual: %s.", string_mode, tb_mode_o); 
         
         #(1);
-        = 1'b0;  
+        
     end
     endtask
 
@@ -88,12 +88,12 @@ module tb_sound_fsm ();
     end
 
     // DUT Portmap
-    sound_generator DUT(.clk(tb_clk),
-                .nRst_i(tb_nRst_i),
-                .button_i(tb_button),
-                .goodColl_i(tb_goodColl),
-                .badColl_i(tb_badColl),
-                .direction_i(tb_direction),
+    sound_fsm DUT(.clk(tb_clk),
+                .nRst(tb_nRst_i),
+                .button(tb_button),
+                .goodColl(tb_goodColl),
+                .badColl(tb_badColl),
+                .direction(tb_direction),
                 .playSound(tb_playsound),
                 .mode_o(tb_mode_o));
 
@@ -104,7 +104,7 @@ module tb_sound_fsm ();
         $dumpvars; 
 
         // Initialize test bench signals
-        tb_button_i = 1'b0; 
+        tb_button = 1'b0; 
         tb_nRst_i = 1'b1;
         tb_checking_outputs = 1'b0;
         tb_test_num = -1;
