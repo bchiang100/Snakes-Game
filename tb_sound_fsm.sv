@@ -139,7 +139,7 @@ module tb_sound_fsm ();
 
 
         // ************************************************************************
-        // Test Case 0: Test playSound
+        // Test Case 1: Test playSound
         // ************************************************************************
         tb_test_num += 1;
         tb_test_case = "Test Case 1: Test playSound";
@@ -159,6 +159,38 @@ module tb_sound_fsm ();
         #(CLK_PERIOD); // allow for some delay
         check_playSound(1'b1);
         tb_direction = 4'b0000;
+
+        #(CLK_PERIOD); // allow for some delay
+        check_playSound(1'b0);
+
+        // ************************************************************************
+        // Test Case 2: Test Toggle ON/OFF
+        // ************************************************************************
+        tb_test_num += 1;
+        tb_test_case = "Test Case 1: Test Toggle ON/OFF";
+        $display("\n\n%s", tb_test_case);
+
+        single_button_press();
+        check_mode_o(OFF, "OFF");
+
+        tb_goodColl = 1'b1;
+        #(CLK_PERIOD); // allow for some delay
+        check_playSound(1'b0);
+        tb_goodColl = 1'b0;
+
+        tb_badColl = 1'b1;
+        #(CLK_PERIOD); // allow for some delay
+        check_playSound(1'b0);
+        tb_badColl = 1'b0;
+
+        tb_direction = 4'b0001;
+        #(CLK_PERIOD); // allow for some delay
+        check_playSound(1'b0);
+        tb_direction = 4'b0000;
+
+        #(CLK_PERIOD);
+        single_button_press();
+        check_mode_o(ON, "ON");
         $finish; 
     end
 
