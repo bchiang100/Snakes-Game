@@ -1,3 +1,4 @@
+// FOR SCORE TRACKER THINK ABOUT MAKING CURR SCORE STAY THERE FOR A FEW SECS LONGER WHILE FLASHING SO USER CAN SEE SCORE ACHIEVE BEFORE HIGH SCORE UPDATES BACK
 module score_tracker(
     input logic clk, nRst, goodColl, badColl,
     output logic [6:0] dispScore,

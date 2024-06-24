@@ -216,6 +216,13 @@ module tb_score_tracker ();
         tb_goodColl = 1'b0;
         check_dispScore(7'd4); 
        
+        // Snake collides with border and ends game
+        tb_badColl = 1'b1;
+        #(CLK_PERIOD); // allow for some delay
+        tb_badColl = 1'b0;
+
+        #(CLK_PERIOD * 5); // making sure the high score stays there
+        check_dispScore(7'd4);
         $finish; 
     end
 
