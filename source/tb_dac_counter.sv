@@ -126,6 +126,9 @@ module tb_dac_counter ();
         
         tb_at_max = 1'b1;
         #(CLK_PERIOD * 300);
+
+        tb_at_max = 1'b0;
+        check_dacCount(8'b0);
         
         $finish; 
     end
