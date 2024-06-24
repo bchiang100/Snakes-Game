@@ -1,6 +1,6 @@
 module dac_counter 
 #(
-    parameter N = 7
+    parameter N = 8
 )
 (
     input logic clk, nRst, at_max,
