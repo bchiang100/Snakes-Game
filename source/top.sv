@@ -41,7 +41,7 @@ module top (
     score_tracker track1 (.clk(clk), .nRst(nRst), .goodColl(pb[0]), .badColl(pb[1]), .dispScore(dispScore), .isGameComplete(isGameComplete));
 
     // Display score on ssdec1 and ssdec2 with fast blinking
-    ssdec ssdec1(.in(dispScore[3:0]), .enable(blinkToggle), .out({ss0, ss1, ss2, ss3, ss4, ss5, ss6}));
-    ssdec ssdec2(.in({1'b0, dispScore[6:4]}), .enable(blinkToggle), .out({ss0, ss1, ss2, ss3, ss4, ss5, ss6}));
+    ssdec ssdec1(.in(dispScore[3:0]), .enable(blinkToggle), .out(ss0[6:0]));
+    ssdec ssdec2(.in({1'b0, dispScore[6:4]}), .enable(blinkToggle), .out(ss1[6:0]));
 
 endmodule
