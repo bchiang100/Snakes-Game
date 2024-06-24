@@ -23,7 +23,7 @@ module tb_sound_fsm ();
     logic tb_clk, tb_nRst_i;
     logic tb_goodColl, tb_badColl, tb_button, tb_playSound;
     logic [3:0] tb_direction;
-    MODE_TYPES tb_mode_o;
+    logic tb_mode_o;
 
 
     // Reset DUT Task
@@ -49,7 +49,7 @@ module tb_sound_fsm ();
 
     // Task to check mode output
     task check_mode_o;
-    input logic [2:0] expected_mode; 
+    input logic expected_mode; 
     input string string_mode; 
     begin
         @(negedge tb_clk); 
@@ -94,7 +94,7 @@ module tb_sound_fsm ();
                 .goodColl(tb_goodColl),
                 .badColl(tb_badColl),
                 .direction(tb_direction),
-                .playSound(tb_playsound),
+                .playSound(tb_playSound),
                 .mode_o(tb_mode_o));
 
     // Main Test Bench Process
