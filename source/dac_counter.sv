@@ -20,7 +20,7 @@ always_comb begin
     if (at_max)
         dacCount_nxt = dacCount + 1;
     else
-        dacCount_nxt = 0;
+        dacCount_nxt = dacCount;
 end
 
 endmodule
