@@ -1,5 +1,5 @@
 `default_nettype none
-//test
+
 module top (
     // I/O ports
     input logic hz100, reset,
