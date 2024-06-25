@@ -23,7 +23,6 @@ module top (
 
 // Blinking timer
 logic [22:0] blinkCounter = 0;
-logic blinkToggle;  // Assuming this was also declared as reg before
 
 // Clock divider for fast blinking
 always @(posedge clk or negedge nRst) begin
