@@ -54,5 +54,57 @@ end
     // Display BCD digits on seven-segment displays with fast blinking
     ssdec ssdec1(.in(bcd_ones), .enable(blinkToggle), .out(ss0[6:0]));
     ssdec ssdec2(.in(bcd_tens), .enable(blinkToggle), .out(ss1[6:0]));
+endmodule
+
+module bcd_adder (
+    input logic [3:0] A, B,  // 4-bit BCD inputs
+    input logic Cin,         // Carry input
+    output logic Cout_bcd,   // BCD carry output
+    output logic [3:0] Sum   // 4-bit BCD sum output
+);
+    logic [4:0] Sum_temp;    // Temporary 5-bit sum including carry
+
+    // Calculate the sum with carry-in
+    assign Sum_temp = A + B + {4'b0, Cin};
+
+    // Check if the sum exceeds BCD limit (9)
+    always_comb begin
+        if (Sum_temp > 9) begin
+            Sum = Sum_temp[3:0] - 4'd10;  // Adjust sum to BCD
+            Cout_bcd = 1;         // Set BCD carry
+        end else begin
+            Sum = Sum_temp[3:0];  // Keep sum as is
+            Cout_bcd = 0;         // No BCD carry
+        end
+    end
+endmodule
+
+module ssdec (
+input logic [3:0] in,
+input logic enable,
+output logic [6:0] out
+);
+always_comb begin
+  case(in)
+    4'b0000: begin out = 7'b0111111; end
+    4'b0001: begin out = 7'b0000110; end
+    4'b0010: begin out = 7'b1011011; end
+    4'b0011: begin out = 7'b1001111; end
+    4'b0100: begin out = 7'b1100110; end
+    4'b0101: begin out = 7'b1101101; end
+    4'b0110: begin out = 7'b1111101; end
+    4'b0111: begin out = 7'b0000111; end
+    4'b1000: begin out = 7'b1111111; end
+    4'b1001: begin out = 7'b1100111; end
+    4'b1010: begin out = 7'b1110111; end
+    4'b1011: begin out = 7'b1111100; end
+    4'b1100: begin out = 7'b0111001; end
+    4'b1101: begin out = 7'b1011110; end
+    4'b1110: begin out = 7'b1111001; end
+    4'b1111: begin out = 7'b1110001; end
+    default: begin out = '0; end
+  endcase
+end
 
 endmodule
+

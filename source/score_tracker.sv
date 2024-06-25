@@ -20,8 +20,7 @@ module score_tracker(
             currScore <= nextCurrScore;
             highScore <= nextHighScore;
             isGameComplete <= isGameComplete_nxt;
-            
-            
+            dispScore <= nextDispScore;
         end
     end
 
