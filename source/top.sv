@@ -69,6 +69,7 @@ end
     ssdec ssdec2(.in(displayOut), .enable(~blinkToggle), .out(ss1[6:0]));
 endmodule
 
+// FIX THIS MODULE -- HARDCODE EVERY CASE IT OVERFLOWS
 module bcd_adder (
     input logic [3:0] A, B,  // 4-bit BCD inputs
     input logic Cin,         // Carry input
