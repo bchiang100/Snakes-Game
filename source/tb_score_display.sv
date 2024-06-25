@@ -19,10 +19,10 @@ module tb ();
     // Reset DUT Task
     task reset_dut;
         @(negedge tb_clk);
-        tb_rst_i = 1'b0; 
+        tb_rst_i = 1'b1; 
         @(negedge tb_clk);
         @(negedge tb_clk);
-        tb_rst_i = 1'b1;
+        tb_rst_i = 1'b0;
         @(posedge tb_clk);
     endtask
     
@@ -54,7 +54,7 @@ module tb ();
         $dumpvars;
 
         // Initialize test bench signals
-        tb_rst_i = 1'b1;
+        tb_rst_i = 1'b0;
         tb_goodCollButton = 1'b0;
         tb_badCollButton = 1'b0;
         tb_checking_outputs = 1'b0;
