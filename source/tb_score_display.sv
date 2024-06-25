@@ -13,6 +13,8 @@ module tb ();
     logic tb_goodCollButton, tb_badCollButton;
     logic [3:0] tb_displayOut, tb_bcd_ones, tb_bcd_tens;
     logic [6:0] tb_ss0, tb_ss1, tb_dispScore;
+    logic [22:0] tb_blinkCounter;
+    logic tb_blinkToggle;
 
 
     // Reset DUT Task
@@ -25,22 +27,6 @@ module tb ();
         @(posedge tb_clk);
     endtask
     
-// Task to check current score output
-    // task check_dispScore;
-    // input logic[6:0] exp_dispScore; 
-    // begin
-    //     @(negedge tb_clk);
-    //     tb_checking_outputs = 1'b1;
-    //     if(tb_dispScore == exp_dispScore)
-    //         $info("Correct displayed score: %0d.", exp_dispScore);
-    //     else
-    //         $error("Incorrect displayed score. Expected: %0d. Actual: %0d.", exp_dispScore, tb_dispScore); 
-        
-    //     #(1);
-    //     tb_checking_outputs = 1'b0;  
-    // end
-    // endtask
-
     // Clock generation block
     always begin
         tb_clk = 1'b0; 
@@ -59,7 +45,9 @@ module tb ();
                 .bcd_tens(tb_bcd_tens),
                 .ss0(tb_ss0),
                 .ss1(tb_ss1),
-                .dispScore(tb_dispScore));
+                .dispScore(tb_dispScore),
+                .blinkToggle(tb_blinkToggle),
+                .blinkCounter(tb_blinkCounter));
 
     // Main Test Bench Process
     initial begin
@@ -99,12 +87,12 @@ module tb ();
 
 
         // ************************************************************************
-        // Test Case 1: Updating displayOut
+        // Test Case 1: Checking Variables
         // ************************************************************************
         tb_test_num += 1;
         reset_dut;
         #(CLK_PERIOD); // allow for some delay
-        tb_test_case = "Test Case 1: Updating currentScore and highScore";
+        tb_test_case = "Test Case 1: Checking Variables";
         $display("\n\n%s", tb_test_case);
 
         tb_goodCollButton = 1'b1;
@@ -135,7 +123,7 @@ module tb ();
         #(CLK_PERIOD);
         tb_goodCollButton = 1'b0;
 
-        #(CLK_PERIOD * 100);
+        #(CLK_PERIOD * 5);
         $finish; 
     end
 

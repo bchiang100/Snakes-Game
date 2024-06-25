@@ -5,20 +5,18 @@ module score_display (
     input logic goodCollButton, badCollButton,
     output logic [3:0] displayOut, bcd_ones, bcd_tens,
     output logic [6:0] ss0, ss1,
-    output logic [6:0] dispScore
+    output logic [6:0] dispScore,
+    output logic blinkToggle,
+    output logic [22:0] blinkCounter
 
 );
-   
-    
-    
     logic isGameComplete;
     logic [3:0] nextDisplayOut;
     logic button;
-    
 
 // Blinking timer
-logic blinkToggle, nextBlinkToggle;
-logic [22:0] blinkCounter, nextBlinkCounter;
+logic nextBlinkToggle;
+logic [22:0] nextBlinkCounter;
 
 
 // BCD conversion using BCD adders
@@ -35,7 +33,6 @@ always_ff @(posedge clk or posedge rst) begin
         blinkToggle <= nextBlinkToggle;
         blinkCounter <= nextBlinkCounter;
         displayOut <= nextDisplayOut;
-
     end
 end
 
@@ -43,15 +40,16 @@ always_comb begin
     nextBlinkCounter = 23'b0;
     nextBlinkToggle = 1'b0;
     nextDisplayOut = 4'b0;
-    if (blinkCounter == 1) begin
+    if (blinkCounter == 20) begin
         nextBlinkToggle = ~blinkToggle;
         nextBlinkCounter = 0;
     end else begin
-    nextBlinkCounter = blinkCounter + 1;
+        nextBlinkCounter = blinkCounter + 1;
+        nextBlinkToggle = blinkToggle;
     end
-    if (nextBlinkToggle) begin
+    if (blinkToggle) begin
         nextDisplayOut = bcd_ones;
-    end else if (~nextBlinkToggle) begin
+    end else begin
         nextDisplayOut = bcd_tens;
     end
 end
@@ -60,8 +58,6 @@ end
     // Score tracker instance
     score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(dispScore), .isGameComplete(isGameComplete));
   
-    
-
     // Convert the lower 4 bits of dispScore to BCD
     bcd_adder bcd_adder1 (.A(dispScore[3:0]), .B(4'b0000), .Cin(1'b0), .Cout_bcd(cout_bcd1), .Sum(bcd_ones));
 
@@ -154,9 +150,50 @@ end
 
 endmodule
 
-// module display2digits (
-//     input [7:0] num,
-//     out [4:0] digit0, digit1
-// );
-//     assign digit0 = num/%10
-// endmodule
+module score_tracker(
+    input logic clk, nRst, goodColl, badColl,
+    output logic [6:0] dispScore,
+    output logic isGameComplete
+);
+    logic [6:0] nextCurrScore, nextHighScore, maxScore;
+    logic [6:0] currScore, highScore, nextDispScore;
+    logic isGameComplete_nxt;
+
+    assign maxScore = 50;
+   
+    always_ff @(posedge clk, negedge nRst) begin
+        if (~nRst) begin
+            currScore <= 7'b0;
+            highScore <= 7'b0;
+            dispScore <= 7'b0;
+            isGameComplete <= 1'b0;
+        end else begin
+            currScore <= nextCurrScore;
+            highScore <= nextHighScore;
+            isGameComplete <= isGameComplete_nxt;
+            dispScore <= nextDispScore;
+        end
+    end
+
+    always_comb begin
+        nextCurrScore = currScore;
+        isGameComplete_nxt = isGameComplete;
+        nextHighScore = highScore;
+        if (goodColl) begin
+            isGameComplete_nxt = 1'b0;
+            nextCurrScore = currScore + 1;
+            if (nextCurrScore > nextHighScore) begin
+                nextHighScore = nextCurrScore;
+            end
+        end
+        if (badColl || currScore >= maxScore) begin
+            nextCurrScore = 0;
+            isGameComplete_nxt = 1'b1;
+        end
+        if (!isGameComplete_nxt) begin
+                nextDispScore = nextCurrScore;
+            end else begin
+                nextDispScore = nextHighScore;
+            end
+    end
+endmodule
