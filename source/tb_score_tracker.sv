@@ -108,32 +108,18 @@ module tb_score_tracker ();
         tb_test_case = "Test Case 1: Updating currentScore and highScore";
         $display("\n\n%s", tb_test_case);
 
-        // Snake eats apple #1
-        tb_goodColl = 1'b1;
-        #(CLK_PERIOD); // allow for some delay
-        tb_goodColl = 1'b0;
-        check_dispScore(7'b1); 
+
+        for (integer i = 0; i < 100; i++) begin
+            // Snake eats apple #i
+            tb_goodColl = 1'b1;
+            #(CLK_PERIOD); // allow for some delay
+            tb_goodColl = 1'b0;
+            
+        end
+        
         
 
-        // Snake eats apple #2
-        tb_goodColl = 1'b1;
-        #(CLK_PERIOD); // allow for some delay
-        tb_goodColl = 1'b0;
-        check_dispScore(7'd2); 
-        
 
-        // Snake eats apple #3
-        tb_goodColl = 1'b1;
-        #(CLK_PERIOD); // allow for some delay
-        tb_goodColl = 1'b0;
-        check_dispScore(7'd3); 
-       
-
-        // Snake eats apple #4
-        tb_goodColl = 1'b1;
-        #(CLK_PERIOD); // allow for some delay
-        tb_goodColl = 1'b0;
-        check_dispScore(7'd4); 
       
  
         // ************************************************************************
