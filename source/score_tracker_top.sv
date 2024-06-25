@@ -1,0 +1,156 @@
+module score_tracker_top (
+    // I/O ports
+    input logic clk, rst,
+    input logic goodCollButton, badCollButton,
+    output logic [3:0] displayOut,
+    output logic [6:0] ss0, ss1
+);
+   
+    
+    logic [6:0] dispScore;
+    logic isGameComplete;
+    logic [3:0] nextDisplayOut;
+    logic button;
+    
+
+// Blinking timer
+logic blinkToggle, nextBlinkToggle;
+logic [22:0] blinkCounter = 0, nextBlinkCounter;
+
+// Clock divider for fast blinking
+always_ff @(posedge clk or posedge rst) begin
+    if (rst) begin
+        blinkCounter <= 0;
+        blinkToggle <= 1'b0;
+        displayOut <= 0;
+    end else begin
+        blinkToggle <= nextBlinkToggle;
+        blinkCounter <= nextBlinkCounter;
+        displayOut <= nextDisplayOut;
+
+    end
+end
+
+always_comb begin
+    nextBlinkCounter = 23'b0;
+    nextBlinkToggle = 1'b0;
+    nextDisplayOut = 4'b0;
+    if (blinkCounter == 1) begin
+        nextBlinkToggle = ~blinkToggle;
+        nextBlinkCounter = 0;
+    end else begin
+    nextBlinkCounter = blinkCounter + 1;
+    end
+    if (nextBlinkToggle) begin
+        nextDisplayOut = bcd_ones;
+    end else if (~nextBlinkToggle) begin
+        nextDisplayOut = bcd_tens;
+    end
+end
+    //posedge_detector posDetector1 (.clk(clk), .nRst(~rst), .button_i(pb[0]), .button(goodCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
+    //posedge_detector posDetector2 (.clk(clk), .nRst(~rst), .button_i(pb[1]), .button(badCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
+    // Score tracker instance
+    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(dispScore), .isGameComplete(isGameComplete));
+  
+    // BCD conversion using BCD adders
+    logic [3:0] bcd_ones, bcd_tens;
+    logic cout_bcd1;
+
+    // Convert the lower 4 bits of dispScore to BCD
+    bcd_adder bcd_adder1 (.A(dispScore[3:0]), .B(4'b0000), .Cin(1'b0), .Cout_bcd(cout_bcd1), .Sum(bcd_ones));
+
+    // Convert the upper 3 bits of dispScore and carry from the lower 4 bits
+    bcd_adder bcd_adder2 (.A({1'b0, dispScore[6:4]}), .B({3'b000, cout_bcd1}), .Cin(1'b0), .Cout_bcd(), .Sum(bcd_tens));
+
+    // Display BCD digits on seven-segment displays with fast blinking
+    ssdec ssdec1(.in(displayOut), .enable(blinkToggle), .out(ss0));
+    ssdec ssdec2(.in(displayOut), .enable(~blinkToggle), .out(ss1));
+endmodule
+
+module bcd_adder (
+    input logic [3:0] A, B,  // 4-bit BCD inputs
+    input logic Cin,         // Carry input
+    output logic Cout_bcd,   // BCD carry output
+    output logic [3:0] Sum   // 4-bit BCD sum output
+);
+    logic [4:0] Sum_temp;    // Temporary 5-bit sum including carry
+
+    // Calculate the sum with carry-in
+    assign Sum_temp = A + B + {4'b0, Cin};
+
+    // Check if the sum exceeds BCD limit (9)
+    always_comb begin
+        if (Sum_temp > 9) begin
+            Sum = Sum_temp[3:0] - 4'd10;  // Adjust sum to BCD
+            Cout_bcd = 1;         // Set BCD carry
+        end else begin
+            Sum = Sum_temp[3:0];  // Keep sum as is
+            Cout_bcd = 0;         // No BCD carry
+        end
+    end
+endmodule
+
+module posedge_detector (
+    input logic clk, nRst, goodColl_i, badColl_i, button_i,
+    input logic [3:0] direction_i,
+    output logic goodColl, badColl, button,
+    output logic [3:0] direction
+);
+
+logic [6:0] N;
+logic [6:0] sig_out;
+logic [6:0] posEdge;
+
+always_ff @(posedge clk, negedge nRst) begin
+    if (~nRst) begin
+        N <= 7'b0;
+        sig_out <= 7'b0;
+    end else begin
+        N <= {goodColl_i, badColl_i, button_i, direction_i};
+        sig_out <= N;
+    end
+end
+assign posEdge = N & ~sig_out;
+
+assign goodColl = posEdge[6];
+assign badColl = posEdge[5];
+assign button = posEdge[4];
+assign direction = posEdge[3:0];
+
+endmodule
+
+module ssdec (
+input logic [3:0] in,
+input logic enable,
+output logic [6:0] out
+);
+always_comb begin
+  case(in)
+    4'b0000: begin out = 7'b0111111; end
+    4'b0001: begin out = 7'b0000110; end
+    4'b0010: begin out = 7'b1011011; end
+    4'b0011: begin out = 7'b1001111; end
+    4'b0100: begin out = 7'b1100110; end
+    4'b0101: begin out = 7'b1101101; end
+    4'b0110: begin out = 7'b1111101; end
+    4'b0111: begin out = 7'b0000111; end
+    4'b1000: begin out = 7'b1111111; end
+    4'b1001: begin out = 7'b1100111; end
+    4'b1010: begin out = 7'b1110111; end
+    4'b1011: begin out = 7'b1111100; end
+    4'b1100: begin out = 7'b0111001; end
+    4'b1101: begin out = 7'b1011110; end
+    4'b1110: begin out = 7'b1111001; end
+    4'b1111: begin out = 7'b1110001; end
+    default: begin out = '0; end
+  endcase
+end
+
+endmodule
+
+// module display2digits (
+//     input [7:0] num,
+//     out [4:0] digit0, digit1
+// );
+//     assign digit0 = num/%10
+// endmodule
