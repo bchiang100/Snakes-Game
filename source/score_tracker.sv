@@ -5,8 +5,9 @@ module score_tracker(
     output logic isGameComplete
 );
     logic [6:0] nextCurrScore, nextHighScore, maxScore;
-    logic [6:0] currScore, highScore;
+    logic [6:0] currScore, highScore, nextDispScore;
     logic isGameComplete_nxt;
+
     assign maxScore = 50;
    
     always_ff @(posedge clk, negedge nRst) begin
@@ -19,11 +20,7 @@ module score_tracker(
             currScore <= nextCurrScore;
             highScore <= nextHighScore;
             isGameComplete <= isGameComplete_nxt;
-            if (!isGameComplete) begin
-                dispScore = currScore;
-            end else begin
-                dispScore = highScore;
-                end
+            
             
         end
     end
@@ -43,5 +40,10 @@ module score_tracker(
             nextCurrScore = 0;
             isGameComplete_nxt = 1'b1;
         end
+        if (!isGameComplete_nxt) begin
+                nextDispScore = nextCurrScore;
+            end else begin
+                nextDispScore = nextHighScore;
+            end
     end
 endmodule
