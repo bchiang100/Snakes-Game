@@ -11,8 +11,8 @@ module tb ();
     // DUT ports
     logic tb_clk, tb_rst_i;
     logic tb_goodCollButton, tb_badCollButton;
-    logic [3:0] tb_displayOut;
-    logic [6:0] tb_ss0, tb_ss1;
+    logic [3:0] tb_displayOut, tb_bcd_ones, tb_bcd_tens;
+    logic [6:0] tb_ss0, tb_ss1, tb_dispScore;
 
 
     // Reset DUT Task
@@ -55,8 +55,11 @@ module tb ();
                 .goodCollButton(tb_goodCollButton),
                 .badCollButton(tb_badCollButton),
                 .displayOut(tb_displayOut),
+                .bcd_ones(tb_bcd_ones),
+                .bcd_tens(tb_bcd_tens),
                 .ss0(tb_ss0),
-                .ss1(tb_ss1));
+                .ss1(tb_ss1),
+                .dispScore(tb_dispScore));
 
     // Main Test Bench Process
     initial begin
@@ -131,6 +134,8 @@ module tb ();
         tb_goodCollButton = 1'b1;
         #(CLK_PERIOD);
         tb_goodCollButton = 1'b0;
+
+        #(CLK_PERIOD * 100);
         $finish; 
     end
 

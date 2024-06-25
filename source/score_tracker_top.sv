@@ -1,13 +1,16 @@
+`default_nettype none
 module score_tracker_top (
     // I/O ports
     input logic clk, rst,
     input logic goodCollButton, badCollButton,
-    output logic [3:0] displayOut,
-    output logic [6:0] ss0, ss1
+    output logic [3:0] displayOut, bcd_ones, bcd_tens,
+    output logic [6:0] ss0, ss1,
+    output logic [6:0] dispScore
+
 );
    
     
-    logic [6:0] dispScore;
+    
     logic isGameComplete;
     logic [3:0] nextDisplayOut;
     logic button;
@@ -15,7 +18,12 @@ module score_tracker_top (
 
 // Blinking timer
 logic blinkToggle, nextBlinkToggle;
-logic [22:0] blinkCounter = 0, nextBlinkCounter;
+logic [22:0] blinkCounter, nextBlinkCounter;
+
+
+// BCD conversion using BCD adders
+    
+    logic cout_bcd1;
 
 // Clock divider for fast blinking
 always_ff @(posedge clk or posedge rst) begin
@@ -52,9 +60,7 @@ end
     // Score tracker instance
     score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(dispScore), .isGameComplete(isGameComplete));
   
-    // BCD conversion using BCD adders
-    logic [3:0] bcd_ones, bcd_tens;
-    logic cout_bcd1;
+    
 
     // Convert the lower 4 bits of dispScore to BCD
     bcd_adder bcd_adder1 (.A(dispScore[3:0]), .B(4'b0000), .Cin(1'b0), .Cout_bcd(cout_bcd1), .Sum(bcd_ones));
