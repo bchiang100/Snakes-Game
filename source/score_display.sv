@@ -6,8 +6,7 @@ module score_display (
     output logic [3:0] displayOut, bcd_ones, bcd_tens,
     output logic [6:0] ss0, ss1,
     output logic [6:0] dispScore,
-    output logic blinkToggle,
-    output logic [22:0] blinkCounter
+    output logic blinkToggle
 
 );
     logic isGameComplete;
@@ -16,8 +15,6 @@ module score_display (
 
 // Blinking timer
 logic nextBlinkToggle;
-logic [22:0] nextBlinkCounter;
-
 
 // BCD conversion using BCD adders
     
@@ -26,27 +23,21 @@ logic [22:0] nextBlinkCounter;
 // Clock divider for fast blinking
 always_ff @(posedge clk or posedge rst) begin
     if (rst) begin
-        blinkCounter <= 0;
         blinkToggle <= 1'b0;
         displayOut <= 0;
     end else begin
         blinkToggle <= nextBlinkToggle;
-        blinkCounter <= nextBlinkCounter;
         displayOut <= nextDisplayOut;
     end
 end
 
 always_comb begin
-    nextBlinkCounter = 23'b0;
+   
     nextBlinkToggle = 1'b0;
     nextDisplayOut = 4'b0;
-    if (blinkCounter == 20) begin
-        nextBlinkToggle = ~blinkToggle;
-        nextBlinkCounter = 0;
-    end else begin
-        nextBlinkCounter = blinkCounter + 1;
-        nextBlinkToggle = blinkToggle;
-    end
+    
+    nextBlinkToggle = ~blinkToggle;
+    
     if (blinkToggle) begin
         nextDisplayOut = bcd_ones;
     end else begin
@@ -146,9 +137,9 @@ always_comb begin
     4'b1111: begin out = 7'b1110001; end
     default: begin out = '0; end
   endcase
-    if (~enable) begin
-            out = 7'b0;
-        end
+  if (~enable) begin
+        out = 7'b0;
+    end
 end
 
 endmodule

@@ -25,33 +25,25 @@ module top (
 
 // Blinking timer
 logic blinkToggle, nextBlinkToggle;
-logic [22:0] blinkCounter = 0, nextBlinkCounter;
 
 // Clock divider for fast blinking
 always_ff @(posedge clk or posedge rst) begin
     if (rst) begin
-        blinkCounter <= 0;
         blinkToggle <= 1'b0;
         displayOut <= 0;
     end else begin
         blinkToggle <= nextBlinkToggle;
-        blinkCounter <= nextBlinkCounter;
         displayOut <= nextDisplayOut;
     end
 end
 
 always_comb begin
-    nextBlinkCounter = 23'b0;
     nextBlinkToggle = 1'b0;
     nextDisplayOut = 4'b0;
-    if (blinkCounter >= 20) begin
-        nextBlinkToggle = ~blinkToggle;
-        nextBlinkCounter = 0;
-    end else begin
-        nextBlinkCounter = blinkCounter + 1;
-        nextBlinkToggle = blinkToggle;
-    end
-    if (blinkToggle) begin
+
+    nextBlinkToggle = ~blinkToggle;
+
+    if (~blinkToggle) begin
         nextDisplayOut = bcd_ones;
     end else begin
         nextDisplayOut = bcd_tens;
@@ -170,7 +162,7 @@ module score_tracker(
     logic [6:0] currScore, highScore, nextDispScore;
     logic isGameComplete_nxt;
 
-    assign maxScore = 50;
+    assign maxScore = 7'd50;
    
     always_ff @(posedge clk, negedge nRst) begin
         if (~nRst) begin

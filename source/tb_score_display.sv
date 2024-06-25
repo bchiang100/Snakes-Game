@@ -13,7 +13,6 @@ module tb ();
     logic tb_goodCollButton, tb_badCollButton;
     logic [3:0] tb_displayOut, tb_bcd_ones, tb_bcd_tens;
     logic [6:0] tb_ss0, tb_ss1, tb_dispScore;
-    logic [22:0] tb_blinkCounter;
     logic tb_blinkToggle;
 
 
@@ -46,8 +45,7 @@ module tb ();
                 .ss0(tb_ss0),
                 .ss1(tb_ss1),
                 .dispScore(tb_dispScore),
-                .blinkToggle(tb_blinkToggle),
-                .blinkCounter(tb_blinkCounter));
+                .blinkToggle(tb_blinkToggle));
 
     // Main Test Bench Process
     initial begin
@@ -94,59 +92,13 @@ module tb ();
         #(CLK_PERIOD); // allow for some delay
         tb_test_case = "Test Case 1: Checking Variables";
         $display("\n\n%s", tb_test_case);
-
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_badCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_badCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
-        tb_goodCollButton = 1'b1;
-        #(CLK_PERIOD);
-        tb_goodCollButton = 1'b0;
-        #(CLK_PERIOD * 50);
+        for (integer i = 0; i < 100; i++) begin
+            tb_goodCollButton = 1'b1;
+            #(CLK_PERIOD);
+            tb_goodCollButton = 1'b0;
+            #(CLK_PERIOD * 10);
+        end
+        
         $finish; 
     end
 
