@@ -44,7 +44,7 @@ always_comb begin
     nextBlinkCounter = 23'b0;
     nextBlinkToggle = 1'b0;
     nextDisplayOut = 4'b0;
-    if (blinkCounter == 20) begin
+    if (blinkCounter >= 20) begin
         nextBlinkToggle = ~blinkToggle;
         nextBlinkCounter = 0;
     end else begin
@@ -73,8 +73,8 @@ end
     bcd_adder bcd_adder2 (.A({1'b0, dispScore[6:4]}), .B({3'b000, cout_bcd1}), .Cin(1'b0), .Cout_bcd(), .Sum(bcd_tens));
 
     // Display BCD digits on seven-segment displays with fast blinking
-    ssdec ssdec1(.in(4'b1), .enable(blinkToggle), .out(ss0[6:0]));
-    ssdec ssdec2(.in(4'd2), .enable(~blinkToggle), .out(ss1[6:0]));
+    ssdec ssdec1(.in(displayOut), .enable(blinkToggle), .out(ss0[6:0]));
+    ssdec ssdec2(.in(displayOut), .enable(~blinkToggle), .out(ss1[6:0]));
 endmodule
 
 module bcd_adder (
@@ -153,7 +153,10 @@ always_comb begin
     4'b1110: begin out = 7'b1111001; end
     4'b1111: begin out = 7'b1110001; end
     default: begin out = '0; end
-  endcase
+    endcase
+        if (~enable) begin
+            out = 7'b0;
+        end
 end
 
 endmodule

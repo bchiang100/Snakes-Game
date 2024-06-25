@@ -98,32 +98,55 @@ module tb ();
         tb_goodCollButton = 1'b1;
         #(CLK_PERIOD);
         tb_goodCollButton = 1'b0;
-        
+        #(CLK_PERIOD * 50);
         tb_goodCollButton = 1'b1;
         #(CLK_PERIOD);
         tb_goodCollButton = 1'b0;
-
+        #(CLK_PERIOD * 50);
         tb_goodCollButton = 1'b1;
         #(CLK_PERIOD);
         tb_goodCollButton = 1'b0;
-
+        #(CLK_PERIOD * 50);
         tb_goodCollButton = 1'b1;
         #(CLK_PERIOD);
         tb_goodCollButton = 1'b0;
-
+        #(CLK_PERIOD * 50);
         tb_badCollButton = 1'b1;
         #(CLK_PERIOD);
         tb_badCollButton = 1'b0;
-
+        #(CLK_PERIOD * 50);
         tb_goodCollButton = 1'b1;
         #(CLK_PERIOD);
         tb_goodCollButton = 1'b0;
-
+        #(CLK_PERIOD * 50);
         tb_goodCollButton = 1'b1;
         #(CLK_PERIOD);
         tb_goodCollButton = 1'b0;
-
-        #(CLK_PERIOD * 5);
+        #(CLK_PERIOD * 50);
+        tb_goodCollButton = 1'b1;
+        #(CLK_PERIOD);
+        tb_goodCollButton = 1'b0;
+        #(CLK_PERIOD * 50);
+        tb_goodCollButton = 1'b1;
+        #(CLK_PERIOD);
+        tb_goodCollButton = 1'b0;
+        #(CLK_PERIOD * 50);
+        tb_goodCollButton = 1'b1;
+        #(CLK_PERIOD);
+        tb_goodCollButton = 1'b0;
+        #(CLK_PERIOD * 50);
+        tb_goodCollButton = 1'b1;
+        #(CLK_PERIOD);
+        tb_goodCollButton = 1'b0;
+        #(CLK_PERIOD * 50);
+        tb_goodCollButton = 1'b1;
+        #(CLK_PERIOD);
+        tb_goodCollButton = 1'b0;
+        #(CLK_PERIOD * 50);
+        tb_goodCollButton = 1'b1;
+        #(CLK_PERIOD);
+        tb_goodCollButton = 1'b0;
+        #(CLK_PERIOD * 50);
         $finish; 
     end
 
