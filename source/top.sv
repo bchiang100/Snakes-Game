@@ -14,33 +14,54 @@ module top (
     output logic txclk, rxclk,
     input logic txready, rxready
 );
-    logic clk, nRst;
+    logic clk, rst;
     assign clk = hz100;
-    assign nRst = reset;
+    assign rst = reset;
     logic isGameComplete;
     logic [6:0] dispScore;
-    logic blinkToggle;
+    logic [3:0] displayOut, nextDisplayOut;
+    logic button;
+    logic goodCollButton, badCollButton;
 
 // Blinking timer
-logic [22:0] blinkCounter = 0;
+logic blinkToggle, nextBlinkToggle;
+logic [22:0] blinkCounter = 0, nextBlinkCounter;
 
 // Clock divider for fast blinking
-always @(posedge clk or negedge nRst) begin
-    if (~nRst) begin
+always_ff @(posedge clk or posedge rst) begin
+    if (rst) begin
         blinkCounter <= 0;
         blinkToggle <= 1'b0;
-    end else if (blinkCounter == 100) begin // Adjust this value for faster blink
-        blinkToggle <= ~blinkToggle;
-        blinkCounter <= 0;
+        displayOut <= 0;
     end else begin
-        blinkCounter <= blinkCounter + 1;
+        blinkToggle <= nextBlinkToggle;
+        blinkCounter <= nextBlinkCounter;
+        displayOut <= nextDisplayOut;
+
     end
 end
 
-
+always_comb begin
+    nextBlinkCounter = 23'b0;
+    nextBlinkToggle = 1'b0;
+    nextDisplayOut = 4'b0;
+    if (blinkCounter == 1) begin
+        nextBlinkToggle = ~blinkToggle;
+        nextBlinkCounter = 0;
+    end else begin
+    nextBlinkCounter = blinkCounter + 1;
+    end
+    if (nextBlinkToggle) begin
+        nextDisplayOut = bcd_ones;
+    end else if (~nextBlinkToggle) begin
+        nextDisplayOut = bcd_tens;
+    end
+end
+    posedge_detector posDetector1 (.clk(clk), .nRst(~rst), .button_i(pb[0]), .button(goodCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
+    posedge_detector posDetector2 (.clk(clk), .nRst(~rst), .button_i(pb[1]), .button(badCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
     // Score tracker instance
-    score_tracker track1 (.clk(clk), .nRst(nRst), .goodColl(pb[0]), .badColl(pb[1]), .dispScore(dispScore), .isGameComplete(isGameComplete));
-
+    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(dispScore), .isGameComplete(isGameComplete));
+  
     // BCD conversion using BCD adders
     logic [3:0] bcd_ones, bcd_tens;
     logic cout_bcd1;
@@ -52,8 +73,8 @@ end
     bcd_adder bcd_adder2 (.A({1'b0, dispScore[6:4]}), .B({3'b000, cout_bcd1}), .Cin(1'b0), .Cout_bcd(), .Sum(bcd_tens));
 
     // Display BCD digits on seven-segment displays with fast blinking
-    ssdec ssdec1(.in(bcd_ones), .enable(blinkToggle), .out(ss0[6:0]));
-    ssdec ssdec2(.in(bcd_tens), .enable(blinkToggle), .out(ss1[6:0]));
+    ssdec ssdec1(.in(displayOut), .enable(blinkToggle), .out(ss0[6:0]));
+    ssdec ssdec2(.in(displayOut), .enable(~blinkToggle), .out(ss1[6:0]));
 endmodule
 
 module bcd_adder (
@@ -77,6 +98,35 @@ module bcd_adder (
             Cout_bcd = 0;         // No BCD carry
         end
     end
+endmodule
+
+module posedge_detector (
+    input logic clk, nRst, goodColl_i, badColl_i, button_i,
+    input logic [3:0] direction_i,
+    output logic goodColl, badColl, button,
+    output logic [3:0] direction
+);
+
+logic [6:0] N;
+logic [6:0] sig_out;
+logic [6:0] posEdge;
+
+always_ff @(posedge clk, negedge nRst) begin
+    if (~nRst) begin
+        N <= 7'b0;
+        sig_out <= 7'b0;
+    end else begin
+        N <= {goodColl_i, badColl_i, button_i, direction_i};
+        sig_out <= N;
+    end
+end
+assign posEdge = N & ~sig_out;
+
+assign goodColl = posEdge[6];
+assign badColl = posEdge[5];
+assign button = posEdge[4];
+assign direction = posEdge[3:0];
+
 endmodule
 
 module ssdec (
@@ -108,3 +158,9 @@ end
 
 endmodule
 
+// module display2digits (
+//     input [7:0] num,
+//     out [4:0] digit0, digit1
+// );
+//     assign digit0 = num/%10
+// endmodule

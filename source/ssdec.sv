@@ -23,6 +23,9 @@ always_comb begin
     4'b1111: begin out = 7'b1110001; end
     default: begin out = '0; end
   endcase
+    if (~enable) begin
+      out = 7'b0000000;
+    end
 end
 
 endmodule
