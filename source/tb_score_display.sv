@@ -50,7 +50,7 @@ module tb ();
     end
 
     // DUT Portmap
-    score_tracker_top DUT(.clk(tb_clk),
+    score_display DUT(.clk(tb_clk),
                 .rst(tb_rst_i),
                 .goodCollButton(tb_goodCollButton),
                 .badCollButton(tb_badCollButton),

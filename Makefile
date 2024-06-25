@@ -9,15 +9,14 @@ export LD_LIBRARY_PATH := /home/shay/a/ece270/lib:$(LD_LIBRARY_PATH)
 
 # Specify the name of the top level file
 # (do not include the source folder in the name)
-TOP_FILE		:= score_tracker_top.sv
+TOP_FILE		:= 
 
 # Specify the name of component or sub-module files
 # (do not include the source folder in the name)
-COMPONENT_FILES	:=  score_tracker.sv
-
+COMPONENT_FILES	:=  
 # Specify the top level testbench to be simulated
 # (do not include the source folder in the name)
-TB 				:= tb.sv
+TB 				:= 
 
 # Directories where source code is located
 SRC 			:= source

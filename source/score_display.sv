@@ -1,5 +1,5 @@
 `default_nettype none
-module score_tracker_top (
+module score_display (
     // I/O ports
     input logic clk, rst,
     input logic goodCollButton, badCollButton,
