@@ -18,7 +18,7 @@ module top (
     assign clk = hz100;
     assign rst = reset;
     logic isGameComplete;
-    logic [6:0] dispScore;
+    logic [6:0] length;
     logic [3:0] displayOut, nextDisplayOut;
     logic button;
     logic goodCollButton, badCollButton;
@@ -55,7 +55,7 @@ end
     posedge_detector posDetector1 (.clk(clk), .nRst(~rst), .button_i(pb[0]), .button(goodCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
     posedge_detector posDetector2 (.clk(clk), .nRst(~rst), .button_i(pb[1]), .button(badCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
     // Score tracker instance
-    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(dispScore), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens));
+    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .length(), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens));
 
     // Display BCD digits on seven-segment displays with fast blinking
     ssdec ssdec1(.in(displayOut), .enable(blinkToggle), .out(ss0[6:0]));
@@ -124,12 +124,12 @@ endmodule
 
 module score_tracker(
     input logic clk, nRst, goodColl, badColl,
-    output logic [6:0] dispScore,
+    output logic [6:0] length,
     output logic [3:0] bcd_ones, bcd_tens,
     output logic isGameComplete
 );
     logic [6:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
-    logic [6:0] currScore, highScore, nextDispScore;
+    logic [6:0] currScore, highScore, nextlength;
     logic isGameComplete_nxt;
     logic [3:0] carry, next_bcd_ones, next_bcd_tens;
     assign maxScore = 7'd50;
@@ -138,7 +138,7 @@ module score_tracker(
         if (~nRst) begin
             currScore <= 7'b0;
             highScore <= 7'b0;
-            dispScore <= 7'b0;
+            length <= 7'b0;
             isGameComplete <= 1'b0;
             bcd_ones <= 0;
             bcd_tens <= 0;
@@ -146,7 +146,7 @@ module score_tracker(
             currScore <= nextCurrScore;
             highScore <= nextHighScore;
             isGameComplete <= isGameComplete_nxt;
-            dispScore <= nextDispScore;
+            length <= nextCurrScore;
             bcd_ones <= next_bcd_ones;
             bcd_tens <= next_bcd_tens;
         end
@@ -230,10 +230,7 @@ module score_tracker(
                 next_bcd_tens = 0;
             end
         end
-        if (!isGameComplete_nxt) begin
-                nextDispScore = nextCurrScore;
-            end else begin
-                nextDispScore = nextHighScore;
+        if (isGameComplete_nxt) begin
             if (nextCurrScore > nextHighScore) begin
                 nextHighScore = nextCurrScore;
             end

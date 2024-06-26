@@ -13,7 +13,6 @@ module score_display (
     logic [3:0] nextDisplayOut;
     logic button;
 
-// Blinking timer
 logic nextBlinkToggle;
 
 // Clock divider for fast blinking
@@ -28,19 +27,17 @@ always_ff @(posedge clk or posedge rst) begin
 end
 
 always_comb begin
-   
     nextBlinkToggle = 1'b0;
     nextDisplayOut = 4'b0;
-    
+
     nextBlinkToggle = ~blinkToggle;
-    
-    if (blinkToggle) begin
+
+    if (~blinkToggle) begin
         nextDisplayOut = bcd_ones;
     end else begin
         nextDisplayOut = bcd_tens;
     end
 end
-
     // Score tracker instance
     score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(dispScore), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens));
 
@@ -49,26 +46,6 @@ end
     ssdec ssdec2(.in(displayOut), .enable(~blinkToggle), .out(ss1));
 endmodule
 
-logic [6:0] N;
-logic [6:0] sig_out;
-logic [6:0] posEdge;
-
-always_ff @(posedge clk, negedge nRst) begin
-    if (~nRst) begin
-        N <= 7'b0;
-        sig_out <= 7'b0;
-    end else begin
-        N <= {goodColl_i, badColl_i, button_i, direction_i};
-        sig_out <= N;
-    end
-end
-assign posEdge = N & ~sig_out;
-assign goodColl = posEdge[6];
-assign badColl = posEdge[5];
-assign button = posEdge[4];
-assign direction = posEdge[3:0];
-
-endmodule
 
 module ssdec (
 input logic [3:0] in,
