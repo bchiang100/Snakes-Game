@@ -16,10 +16,6 @@ module score_display (
 // Blinking timer
 logic nextBlinkToggle;
 
-// BCD conversion using BCD adders
-    
-    logic cout_bcd1;
-
 // Clock divider for fast blinking
 always_ff @(posedge clk or posedge rst) begin
     if (rst) begin
@@ -44,51 +40,14 @@ always_comb begin
         nextDisplayOut = bcd_tens;
     end
 end
-    //posedge_detector posDetector1 (.clk(clk), .nRst(~rst), .button_i(pb[0]), .button(goodCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
-    //posedge_detector posDetector2 (.clk(clk), .nRst(~rst), .button_i(pb[1]), .button(badCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
-    // Score tracker instance
-    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(dispScore), .isGameComplete(isGameComplete));
-  
-    // Convert the lower 4 bits of dispScore to BCD
-    bcd_adder bcd_adder1 (.A(dispScore[3:0]), .B(4'b0000), .Cin(1'b0), .Cout_bcd(cout_bcd1), .Sum(bcd_ones));
 
-    // Convert the upper 3 bits of dispScore and carry from the lower 4 bits
-    bcd_adder bcd_adder2 (.A({1'b0, dispScore[6:4]}), .B({3'b000, cout_bcd1}), .Cin(1'b0), .Cout_bcd(), .Sum(bcd_tens));
+    // Score tracker instance
+    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(dispScore), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens));
 
     // Display BCD digits on seven-segment displays with fast blinking
     ssdec ssdec1(.in(displayOut), .enable(blinkToggle), .out(ss0));
     ssdec ssdec2(.in(displayOut), .enable(~blinkToggle), .out(ss1));
 endmodule
-
-module bcd_adder (
-    input logic [3:0] A, B,  // 4-bit BCD inputs
-    input logic Cin,         // Carry input
-    output logic Cout_bcd,   // BCD carry output
-    output logic [3:0] Sum   // 4-bit BCD sum output
-);
-    logic [4:0] Sum_temp;    // Temporary 5-bit sum including carry
-
-    // Calculate the sum with carry-in
-    assign Sum_temp = A + B + {4'b0, Cin};
-
-    // Check if the sum exceeds BCD limit (9)
-    always_comb begin
-        if (Sum_temp > 9) begin
-            Sum = Sum_temp[3:0] - 4'd10;  // Adjust sum to BCD
-            Cout_bcd = 1;         // Set BCD carry
-        end else begin
-            Sum = Sum_temp[3:0];  // Keep sum as is
-            Cout_bcd = 0;         // No BCD carry
-        end
-    end
-endmodule
-
-module posedge_detector (
-    input logic clk, nRst, goodColl_i, badColl_i, button_i,
-    input logic [3:0] direction_i,
-    output logic goodColl, badColl, button,
-    output logic [3:0] direction
-);
 
 logic [6:0] N;
 logic [6:0] sig_out;
@@ -104,7 +63,6 @@ always_ff @(posedge clk, negedge nRst) begin
     end
 end
 assign posEdge = N & ~sig_out;
-
 assign goodColl = posEdge[6];
 assign badColl = posEdge[5];
 assign button = posEdge[4];
@@ -136,10 +94,10 @@ always_comb begin
     4'b1110: begin out = 7'b1111001; end
     4'b1111: begin out = 7'b1110001; end
     default: begin out = '0; end
-  endcase
-  if (~enable) begin
-        out = 7'b0;
-    end
+    endcase
+        if (~enable) begin
+            out = 7'b0;
+        end
 end
 
 endmodule
@@ -147,13 +105,14 @@ endmodule
 module score_tracker(
     input logic clk, nRst, goodColl, badColl,
     output logic [6:0] dispScore,
+    output logic [3:0] bcd_ones, bcd_tens,
     output logic isGameComplete
 );
-    logic [6:0] nextCurrScore, nextHighScore, maxScore;
+    logic [6:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
     logic [6:0] currScore, highScore, nextDispScore;
     logic isGameComplete_nxt;
-
-    assign maxScore = 50;
+    logic [3:0] carry, next_bcd_ones, next_bcd_tens;
+    assign maxScore = 7'd50;
    
     always_ff @(posedge clk, negedge nRst) begin
         if (~nRst) begin
@@ -161,11 +120,15 @@ module score_tracker(
             highScore <= 7'b0;
             dispScore <= 7'b0;
             isGameComplete <= 1'b0;
+            bcd_ones <= 0;
+            bcd_tens <= 0;
         end else begin
             currScore <= nextCurrScore;
             highScore <= nextHighScore;
             isGameComplete <= isGameComplete_nxt;
             dispScore <= nextDispScore;
+            bcd_ones <= next_bcd_ones;
+            bcd_tens <= next_bcd_tens;
         end
     end
 
@@ -173,9 +136,42 @@ module score_tracker(
         nextCurrScore = currScore;
         isGameComplete_nxt = isGameComplete;
         nextHighScore = highScore;
+        next_bcd_ones = bcd_ones;
+        next_bcd_tens = bcd_tens;
+        deconcatenate = 0;
         if (goodColl) begin
             isGameComplete_nxt = 1'b0;
             nextCurrScore = currScore + 1;
+            
+            if (nextCurrScore > 49) begin
+                deconcatenate = nextCurrScore - 50;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens= 5;
+            end
+            else if (nextCurrScore > 39) begin
+                deconcatenate = nextCurrScore - 40;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 4;
+            end
+            else if (nextCurrScore > 29) begin
+                deconcatenate = nextCurrScore - 30;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens= 3;
+            end
+            else if (nextCurrScore > 19) begin
+                deconcatenate = nextCurrScore - 20;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 2;
+            end
+            else if (nextCurrScore > 9) begin
+                deconcatenate = nextCurrScore - 10;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 1;
+            end else begin
+                deconcatenate = nextCurrScore;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 0;
+            end
             if (nextCurrScore > nextHighScore) begin
                 nextHighScore = nextCurrScore;
             end
@@ -183,11 +179,44 @@ module score_tracker(
         if (badColl || currScore >= maxScore) begin
             nextCurrScore = 0;
             isGameComplete_nxt = 1'b1;
+
+            if (nextHighScore > 49) begin
+                deconcatenate = nextHighScore - 50;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens= 5;
+            end
+            else if (nextHighScore > 39) begin
+                deconcatenate = nextHighScore - 40;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 4;
+            end
+            else if (nextHighScore > 29) begin
+                deconcatenate = nextHighScore - 30;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens= 3;
+            end
+            else if (nextHighScore > 19) begin
+                deconcatenate = nextHighScore - 20;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 2;
+            end
+            else if (nextHighScore > 9) begin
+                deconcatenate = nextHighScore - 10;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 1;
+            end else begin
+                deconcatenate = nextHighScore;
+                next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 0;
+            end
         end
         if (!isGameComplete_nxt) begin
                 nextDispScore = nextCurrScore;
             end else begin
                 nextDispScore = nextHighScore;
+            if (nextCurrScore > nextHighScore) begin
+                nextHighScore = nextCurrScore;
             end
+        end
     end
 endmodule
