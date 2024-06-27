@@ -24,10 +24,11 @@ always_ff @(posedge clk, negedge nRst) begin
 end
 always_comb begin
     at_max = 1'b0;
+    count_nxt = count;
     if (state == ON)
-        if (count < 10000000 / (256 * freq) && playSound) begin// fix this
+        if ({16'b0, count} < 10000000 / (256 * freq) && playSound) begin// fix this
             count_nxt = count + 1;
-        end else if (count >= (10000000 / 256) / freq) begin // fix this
+        end else if ({16'b0, count} >= 10000000 / (256 * freq)) begin // fix this
             at_max = 1'b1;
         end
     else begin
