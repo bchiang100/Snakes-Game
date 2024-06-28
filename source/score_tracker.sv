@@ -1,12 +1,12 @@
 // FOR SCORE TRACKER THINK ABOUT MAKING CURR SCORE STAY THERE FOR A FEW SECS LONGER WHILE FLASHING SO USER CAN SEE SCORE ACHIEVE BEFORE HIGH SCORE UPDATES BACK
 module score_tracker(
     input logic clk, nRst, goodColl, badColl,
-    output logic [6:0] dispScore,
+    output logic [6:0] length,
     output logic [3:0] bcd_ones, bcd_tens,
     output logic isGameComplete
 );
     logic [6:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
-    logic [6:0] currScore, highScore, nextDispScore;
+    logic [6:0] currScore, highScore, nextLength;
     logic isGameComplete_nxt;
     logic [3:0] carry, next_bcd_ones, next_bcd_tens;
     assign maxScore = 7'd50;
@@ -15,7 +15,7 @@ module score_tracker(
         if (~nRst) begin
             currScore <= 7'b0;
             highScore <= 7'b0;
-            dispScore <= 7'b0;
+            length <= 7'b0;
             isGameComplete <= 1'b0;
             bcd_ones <= 0;
             bcd_tens <= 0;
@@ -23,7 +23,7 @@ module score_tracker(
             currScore <= nextCurrScore;
             highScore <= nextHighScore;
             isGameComplete <= isGameComplete_nxt;
-            dispScore <= nextDispScore;
+            length <= nextLength;
             bcd_ones <= next_bcd_ones;
             bcd_tens <= next_bcd_tens;
         end
@@ -35,6 +35,7 @@ module score_tracker(
         nextHighScore = highScore;
         next_bcd_ones = bcd_ones;
         next_bcd_tens = bcd_tens;
+        nextLength = length;
         deconcatenate = 0;
         if (goodColl) begin
             isGameComplete_nxt = 1'b0;
@@ -108,9 +109,9 @@ module score_tracker(
             end
         end
         if (!isGameComplete_nxt) begin
-                nextDispScore = nextCurrScore;
+                nextLength = nextCurrScore;
             end else begin
-                nextDispScore = nextHighScore;
+                
             if (nextCurrScore > nextHighScore) begin
                 nextHighScore = nextCurrScore;
             end
