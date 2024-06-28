@@ -146,26 +146,26 @@ module tb_sound_generator ();
         $display("\n\n%s", tb_test_case);
 
         tb_goodColl = 1'b1;
-        #(CLK_PERIOD); // allow for some delay
+        #(CLK_PERIOD * 300); // allow for some delay
         //check_playSound(1'b1);
         tb_goodColl = 1'b0;
 
-        #(CLK_PERIOD * 300);
+        #(CLK_PERIOD * 20);
 
         tb_badColl = 1'b1;
-        #(CLK_PERIOD); // allow for some delay
+        #(CLK_PERIOD * 300); // allow for some delay
         //check_playSound(1'b1);
         tb_badColl = 1'b0;
 
-        #(CLK_PERIOD * 300);
+        #(CLK_PERIOD * 20);
 
         tb_direction = 4'b0001;
-        #(CLK_PERIOD); // allow for some delay
+        #(CLK_PERIOD * 300); // allow for some delay
         //check_playSound(1'b1);
         tb_direction = 4'b0000;
 
 
-        #(CLK_PERIOD * 300);
+        #(CLK_PERIOD * 20);
         #(CLK_PERIOD); // allow for some delay
         //check_playSound(1'b0);
 

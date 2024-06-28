@@ -20,7 +20,7 @@ logic playSound;
 logic at_max;
 MODE_TYPES mode_o;
 
-pos_detector posDet (.goodColl(goodColl), .badColl(badColl), .button(button), .direction(direction), .clk(clk), .nRst(nRst), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .button_i(button_i), .direction_i(direction_i));
+posedge_detector posDet (.goodColl(goodColl), .badColl(badColl), .button(button), .direction(direction), .clk(clk), .nRst(nRst), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .button_i(button_i), .direction_i(direction_i));
 freq_selector freqSel (.freq(freq), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .direction_i(direction_i));
 sound_fsm fsm (.playSound(playSound), .mode_o(mode_o), .clk(clk), .nRst(nRst), .goodColl(goodColl), .badColl(badColl), .button(button), .direction(direction));
 oscillator osc (.at_max(at_max), .clk(clk), .nRst(nRst), .freq(freq), .state(mode_o), .playSound(playSound));
