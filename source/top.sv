@@ -44,7 +44,7 @@ module top (
     oscillator osc1 (.at_max(at_max), .clk(clk), .nRst(~rst), .freq(freq), .state(mode_o), .playSound(playSound));
     dac_counter dac1 (.dacCount(soundOut), .clk(clk), .nRst(~rst), .at_max(at_max));
 
-endmodule;
+endmodule
 
 module dac_counter 
 #(
