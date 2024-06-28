@@ -18,7 +18,14 @@ always_ff @(posedge clk, negedge nRst) begin
         sig_out <= N;
     end
 end
-assign posEdge = N & ~sig_out;
+assign posEdge[6] = N[6] & ~sig_out[6];
+assign posEdge[5] = N[5] & ~sig_out[5];
+assign posEdge[4] = N[4] & ~sig_out[4];
+assign posEdge[3] = N[3] & ~sig_out[3];
+assign posEdge[2] = N[2] & ~sig_out[2];
+assign posEdge[1] = N[1] & ~sig_out[1];
+assign posEdge[0] = N[0] & ~sig_out[0];
+
 
 assign goodColl = posEdge[6];
 assign badColl = posEdge[5];
