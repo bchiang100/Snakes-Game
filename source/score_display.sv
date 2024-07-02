@@ -6,7 +6,7 @@ module score_display (
     input logic goodCollButton, badCollButton,
     output logic [3:0] displayOut, bcd_ones, bcd_tens,
     output logic [6:0] ss0, ss1,
-    output logic [6:0] length,
+    output logic [7:0] length,
 
 
 );
@@ -82,21 +82,21 @@ endmodule
 
 module score_tracker(
     input logic clk, nRst, goodColl, badColl,
-    output logic [6:0] length,
+    output logic [7:0] length,
     output logic [3:0] bcd_ones, bcd_tens,
     output logic isGameComplete
 );
-    logic [6:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
-    logic [6:0] currScore, highScore, nextLength;
+    logic [7:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
+    logic [7:0] currScore, highScore, nextLength;
     logic isGameComplete_nxt;
-    logic [3:0] carry, next_bcd_ones, next_bcd_tens;
-    assign maxScore = 7'd50;
+    logic [3:0] next_bcd_ones, next_bcd_tens;
+    assign maxScore = 8'd50;
    
     always_ff @(posedge clk, negedge nRst) begin
         if (~nRst) begin
-            currScore <= 7'b0;
-            highScore <= 7'b0;
-            length <= 7'b0;
+            currScore <= 8'b0;
+            highScore <= 8'b0;
+            length <= 8'b0;
             isGameComplete <= 1'b0;
             bcd_ones <= 0;
             bcd_tens <= 0;
