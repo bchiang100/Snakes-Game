@@ -1,6 +1,7 @@
 `default_nettype none
 
-module top (
+module top 
+(
     // I/O ports
     input logic hz100, reset,
     input logic [20:0] pb,
@@ -30,7 +31,7 @@ module top (
     posedge_detector posDetector1 (.clk(clk), .nRst(~rst), .button_i(pb[0]), .button(goodCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
     posedge_detector posDetector2 (.clk(clk), .nRst(~rst), .button_i(pb[1]), .button(badCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
     // Score tracker instance
-    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .length(), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
+    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(), .currentScore(), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
 
     // Toggle Screen
     toggle_screen toggle1(.displayOut(displayOut), .blinkToggle(blinkToggle), .clk(clk), .rst(rst), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
@@ -139,54 +140,58 @@ end
 
 endmodule
 
-module score_tracker(
+module score_tracker (
     input logic clk, nRst, goodColl, badColl,
-    output logic [7:0] length,
+    output logic [7:0] current_score,
+    output logic [7:0] dispScore,
     output logic [3:0] bcd_ones, bcd_tens, bcd_hundreds,
     output logic isGameComplete
 );
     logic [7:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
-    logic [7:0] currScore, highScore, nextLength;
-    logic isGameComplete_nxt;
-    logic [3:0] next_bcd_ones, next_bcd_tens, next_bcd_hundreds;
+    logic [7:0] currScore, highScore, nextDispScore;
+    logic isGameComplete_nxt, last_collision, current_collision;
+    logic [3:0] carry, next_bcd_ones, next_bcd_tens, next_bcd_hundreds;
     assign maxScore = 8'd140;
    
     always_ff @(posedge clk, negedge nRst) begin
         if (~nRst) begin
             currScore <= 8'b0;
             highScore <= 8'b0;
-            length <= 8'b0;
-            isGameComplete <= 1'b0;
+            dispScore <= 8'b0;
+            //isGameComplete <= 1'b0;
             bcd_ones <= 0;
             bcd_tens <= 0;
             bcd_hundreds <= 0;
+            last_collision <= 0;
         end else begin
             currScore <= nextCurrScore;
             highScore <= nextHighScore;
-            isGameComplete <= isGameComplete_nxt;
-            length <= nextLength;
+            //isGameComplete <= isGameComplete_nxt;
+            dispScore <= nextDispScore;
             bcd_ones <= next_bcd_ones;
             bcd_tens <= next_bcd_tens;
             bcd_hundreds <= next_bcd_hundreds;
+            last_collision <= current_collision;
         end
     end
 
     always_comb begin
         nextCurrScore = currScore;
-        isGameComplete_nxt = isGameComplete;
+        isGameComplete = 1'b0;
         nextHighScore = highScore;
         next_bcd_ones = bcd_ones;
         next_bcd_tens = bcd_tens;
         next_bcd_hundreds = bcd_hundreds;
-        nextLength = length;
         deconcatenate = 0;
-        if (goodColl) begin
-            isGameComplete_nxt = 1'b0;
+        current_collision = last_collision;
+        
+        if (goodColl && last_collision == 0) begin
+            isGameComplete = 1'b0;
             nextCurrScore = currScore + 1;
+            current_collision = 1;
+            
             if (nextCurrScore > 139) begin
-                deconcatenate = nextCurrScore - 140;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 4;
+                next_bcd_tens= 1;
                 next_bcd_hundreds = 1;
             end
             else if (nextCurrScore > 129) begin
@@ -204,8 +209,6 @@ module score_tracker(
             else if (nextCurrScore > 109) begin
                 deconcatenate = nextCurrScore - 110;
                 next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 1;
-                next_bcd_hundreds = 1;
             end
             else if (nextCurrScore > 99) begin
                 deconcatenate = nextCurrScore - 100;
@@ -278,7 +281,8 @@ module score_tracker(
         end
         if (badColl || currScore >= maxScore) begin
             nextCurrScore = 0;
-            isGameComplete_nxt = 1'b1;
+            isGameComplete = 1'b1;
+
             if (nextHighScore > 139) begin
                 deconcatenate = nextHighScore - 140;
                 next_bcd_ones = deconcatenate[3:0];
@@ -369,14 +373,19 @@ module score_tracker(
                 next_bcd_hundreds = 0;
             end
         end
+        if(goodColl == 0 || last_collision == 1) begin
+            current_collision = 0;
+        end
         if (!isGameComplete_nxt) begin
-                nextLength = nextCurrScore;
+                nextDispScore = nextCurrScore;
             end else begin
-                
+                nextDispScore = nextHighScore;
             if (nextCurrScore > nextHighScore) begin
                 nextHighScore = nextCurrScore;
             end
         end
     end
+
+    assign current_score = currScore;
 endmodule
 

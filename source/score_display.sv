@@ -8,7 +8,6 @@ module score_display (
     output logic [6:0] ss0, ss1,
     output logic [7:0] length,
 
-
 );
     logic isGameComplete;
     logic [3:0] nextDisplayOut;
