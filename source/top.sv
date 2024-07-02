@@ -1,7 +1,9 @@
 `default_nettype none
-
-module top 
-(
+typedef enum logic {
+    OFF = 1'b0,
+    ON = 1'b1
+} MODE_TYPES;
+module top (
     // I/O ports
     input logic hz100, reset,
     input logic [20:0] pb,
@@ -16,68 +18,59 @@ module top
     input logic txready, rxready
 );
     logic clk, rst;
+    logic goodColl_i, badColl_i, toggleMode_i;
+    logic goodColl, badColl, toggleMode;
+
+    logic [3:0] direction_i;
+    logic [3:0] newDirection;
+
+    logic [7:0] freq;
+    logic playSound;
+    MODE_TYPES mode_o;
+    logic at_max;
+    logic [7:0] soundOut;
+
     assign clk = hz100;
     assign rst = reset;
-    logic isGameComplete;
-    logic [6:0] length;
-    logic [3:0] displayOut, nextDisplayOut;
-    logic button;
-    logic [1:0] blinkToggle;
-    logic goodCollButton, badCollButton;
+    assign direction_i = {pb[13], pb[5], pb[8], pb[10]};
+    assign goodColl_i = pb[0];
+    assign badColl_i = pb[1];
+    assign toggleMode_i = pb[2];
+    assign soundOut = {right[7], right[6], right[5], right[4], right[3], right[2], right[1], right[0]};
 
-    // BCD conversion using BCD adders
-    logic [3:0] bcd_ones, bcd_tens, bcd_hundreds;
-    
-    posedge_detector posDetector1 (.clk(clk), .nRst(~rst), .button_i(pb[0]), .button(goodCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
-    posedge_detector posDetector2 (.clk(clk), .nRst(~rst), .button_i(pb[1]), .button(badCollButton), .goodColl_i(1'b0), .badColl_i(1'b0), .direction_i(4'b0), .goodColl(), .badColl(), .direction());
-    // Score tracker instance
-    score_tracker track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(), .currentScore(), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
+    posedge_detector posDetector1 (.clk(clk), .nRst(~rst), .button_i(toggleMode_i), .button(toggleMode), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .direction_i(direction_i), .goodColl(goodColl), .badColl(badColl), .direction(newDirection));
+    freq_selector_12M freq_12 (.freq(freq), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .direction_i(direction_i));
+    sound_fsm fsm1 (.playSound(playSound), .mode_o(mode_o), .clk(clk), .nRst(~rst), .goodColl(goodColl), .badColl(badColl), .button(toggleMode), .direction(newDirection));
+    oscillator osc1 (.at_max(at_max), .clk(clk), .nRst(~rst), .freq(freq), .state(mode_o), .playSound(playSound));
+    dac_counter dac1 (.dacCount(soundOut), .clk(clk), .nRst(~rst), .at_max(at_max));
 
-    // Toggle Screen
-    toggle_screen toggle1(.displayOut(displayOut), .blinkToggle(blinkToggle), .clk(clk), .rst(rst), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
-    // Display BCD digits on seven-segment displays with fast blinking
-    ssdec ssdec1(.in(displayOut), .enable(blinkToggle == 1), .out(ss0[6:0]));
-    ssdec ssdec2(.in(displayOut), .enable(blinkToggle == 2), .out(ss1[6:0]));
-    ssdec ssdec3(.in(displayOut), .enable(blinkToggle == 0), .out(ss2[6:0]));
 endmodule
 
-module toggle_screen (
-    input logic clk, rst,
-    input logic [3:0] bcd_ones, bcd_tens, bcd_hundreds,
-    output logic [3:0] displayOut,
-    output logic [1:0] blinkToggle
+module dac_counter 
+#(
+    parameter N = 8
+)
+(
+    input logic clk, nRst, at_max,
+    output logic [N - 1:0] dacCount
 );
-logic [1:0] nextBlinkToggle;
-logic [3:0] nextDisplayOut;
 
-always_ff @(posedge clk or posedge rst) begin
-    if (rst) begin
-        blinkToggle <= 2'b0;
-        displayOut <= 0;
+logic [N - 1:0] dacCount_nxt;
+always_ff @(posedge clk, negedge nRst) begin
+    if (~nRst) begin
+        dacCount <= 0;
     end else begin
-        blinkToggle <= nextBlinkToggle;
-        displayOut <= nextDisplayOut;
+        dacCount <= dacCount_nxt;
     end
 end
 
 always_comb begin
-    nextBlinkToggle = 2'b0;
-    nextDisplayOut = 4'b0;
-
-    if (blinkToggle < 2'd2) begin
-        nextBlinkToggle = blinkToggle + 2'b1;
-    end else begin
-        nextBlinkToggle = 2'b0;
-    end
-    
-    if (blinkToggle == 0) begin
-        nextDisplayOut = bcd_ones;
-    end else if (blinkToggle == 1) begin
-        nextDisplayOut = bcd_tens;
-    end else begin
-        nextDisplayOut = bcd_hundreds;
-    end
+    if (at_max)
+        dacCount_nxt = dacCount + 1;
+    else
+        dacCount_nxt = dacCount;
 end
+
 endmodule
 
 module posedge_detector (
@@ -100,292 +93,128 @@ always_ff @(posedge clk, negedge nRst) begin
         sig_out <= N;
     end
 end
-assign posEdge = N & ~sig_out;
-assign goodColl = posEdge[6];
-assign badColl = posEdge[5];
-assign button = posEdge[4];
-assign direction = posEdge[3:0];
+assign posEdge = N & ~sig_out | (N & sig_out);
+
+assign goodColl = N[6] & ~sig_out[6] | (N[6] & sig_out[6]);
+assign badColl = N[5] & ~sig_out[5] | (N[5] & sig_out[5]);
+assign button = N[4] & ~sig_out[4];
+assign direction = N[3:0] & ~sig_out[3:0] | (N[3:0] & sig_out[3:0]);
 
 endmodule
 
-module ssdec (
-input logic [3:0] in,
-input logic enable,
-output logic [6:0] out
+// 10M is for final chip
+module freq_selector_10M(
+    input logic goodColl_i, badColl_i,
+    input logic [3:0] direction_i,
+    output logic [7:0] freq
 );
+
 always_comb begin
-  case(in)
-    4'b0000: begin out = 7'b0111111; end
-    4'b0001: begin out = 7'b0000110; end
-    4'b0010: begin out = 7'b1011011; end
-    4'b0011: begin out = 7'b1001111; end
-    4'b0100: begin out = 7'b1100110; end
-    4'b0101: begin out = 7'b1101101; end
-    4'b0110: begin out = 7'b1111101; end
-    4'b0111: begin out = 7'b0000111; end
-    4'b1000: begin out = 7'b1111111; end
-    4'b1001: begin out = 7'b1100111; end
-    4'b1010: begin out = 7'b1110111; end
-    4'b1011: begin out = 7'b1111100; end
-    4'b1100: begin out = 7'b0111001; end
-    4'b1101: begin out = 7'b1011110; end
-    4'b1110: begin out = 7'b1111001; end
-    4'b1111: begin out = 7'b1110001; end
-    default: begin out = '0; end
-  endcase
-    if (~enable) begin
-      out = 7'b0000000;
-    end
+    freq = 0;
+    if (goodColl_i)
+        freq = 8'd89; // 10M / ((1/440) / 256) - A
+    if (badColl_i)
+        freq = 8'd126; // 10M / ((1/311) / 256) - D Sharp
+    if (|direction_i)
+        freq = 8'd149; // 10M / ((1/262) / 256) - C
 end
 
 endmodule
 
-module score_tracker (
-    input logic clk, nRst, goodColl, badColl,
-    output logic [7:0] current_score,
-    output logic [7:0] dispScore,
-    output logic [3:0] bcd_ones, bcd_tens, bcd_hundreds,
-    output logic isGameComplete
+// 12M is for FPGA
+module freq_selector_12M(
+    input logic goodColl_i, badColl_i,
+    input logic [3:0] direction_i,
+    output logic [7:0] freq
 );
-    logic [7:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
-    logic [7:0] currScore, highScore, nextDispScore;
-    logic isGameComplete_nxt, last_collision, current_collision;
-    logic [3:0] carry, next_bcd_ones, next_bcd_tens, next_bcd_hundreds;
-    assign maxScore = 8'd140;
-   
-    always_ff @(posedge clk, negedge nRst) begin
-        if (~nRst) begin
-            currScore <= 8'b0;
-            highScore <= 8'b0;
-            dispScore <= 8'b0;
-            //isGameComplete <= 1'b0;
-            bcd_ones <= 0;
-            bcd_tens <= 0;
-            bcd_hundreds <= 0;
-            last_collision <= 0;
-        end else begin
-            currScore <= nextCurrScore;
-            highScore <= nextHighScore;
-            //isGameComplete <= isGameComplete_nxt;
-            dispScore <= nextDispScore;
-            bcd_ones <= next_bcd_ones;
-            bcd_tens <= next_bcd_tens;
-            bcd_hundreds <= next_bcd_hundreds;
-            last_collision <= current_collision;
-        end
-    end
 
-    always_comb begin
-        nextCurrScore = currScore;
-        isGameComplete = 1'b0;
-        nextHighScore = highScore;
-        next_bcd_ones = bcd_ones;
-        next_bcd_tens = bcd_tens;
-        next_bcd_hundreds = bcd_hundreds;
-        deconcatenate = 0;
-        current_collision = last_collision;
-        
-        if (goodColl && last_collision == 0) begin
-            isGameComplete = 1'b0;
-            nextCurrScore = currScore + 1;
-            current_collision = 1;
-            
-            if (nextCurrScore > 139) begin
-                next_bcd_tens= 1;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextCurrScore > 129) begin
-                deconcatenate = nextCurrScore - 130;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 3;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextCurrScore > 119) begin
-                deconcatenate = nextCurrScore - 120;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 2;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextCurrScore > 109) begin
-                deconcatenate = nextCurrScore - 110;
-                next_bcd_ones = deconcatenate[3:0];
-            end
-            else if (nextCurrScore > 99) begin
-                deconcatenate = nextCurrScore - 100;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 0;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextCurrScore > 89) begin
-                deconcatenate = nextCurrScore - 90;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 9;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextCurrScore > 79) begin
-                deconcatenate = nextCurrScore - 80;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 8;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextCurrScore > 69) begin
-                deconcatenate = nextCurrScore - 70;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 7;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextCurrScore > 59) begin
-                deconcatenate = nextCurrScore - 60;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 6;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextCurrScore > 49) begin
-                deconcatenate = nextCurrScore - 50;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 5;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextCurrScore > 39) begin
-                deconcatenate = nextCurrScore - 40;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens = 4;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextCurrScore > 29) begin
-                deconcatenate = nextCurrScore - 30;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 3;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextCurrScore > 19) begin
-                deconcatenate = nextCurrScore - 20;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens = 2;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextCurrScore > 9) begin
-                deconcatenate = nextCurrScore - 10;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens = 1;
-                next_bcd_hundreds = 0;
-            end else begin
-                deconcatenate = nextCurrScore;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens = 0;
-                next_bcd_hundreds = 0;
-            end
-            if (nextCurrScore > nextHighScore) begin
-                nextHighScore = nextCurrScore;
-            end
-        end
-        if (badColl || currScore >= maxScore) begin
-            nextCurrScore = 0;
-            isGameComplete = 1'b1;
+always_comb begin
+    freq = 0;
+    if (goodColl_i)
+        freq = 8'd107; // 12M / ((1/440) / 256) - A
+    if (badColl_i)
+        freq = 8'd151; // 12M / ((1/311) / 256) - D Sharp
+    if (|direction_i)
+        freq = 8'd179; // 12M / ((1/262) / 256) - C
+end
 
-            if (nextHighScore > 139) begin
-                deconcatenate = nextHighScore - 140;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 4;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextHighScore > 129) begin
-                deconcatenate = nextHighScore - 130;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 3;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextHighScore > 119) begin
-                deconcatenate = nextHighScore - 120;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 2;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextHighScore > 109) begin
-                deconcatenate = nextHighScore - 110;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 1;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextHighScore > 99) begin
-                deconcatenate = nextHighScore - 100;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 0;
-                next_bcd_hundreds = 1;
-            end
-            else if (nextHighScore > 89) begin
-                deconcatenate = nextHighScore - 90;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 9;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextHighScore > 79) begin
-                deconcatenate = nextHighScore - 80;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 8;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextHighScore > 69) begin
-                deconcatenate = nextHighScore - 70;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 7;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextHighScore > 59) begin
-                deconcatenate = nextHighScore - 60;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 6;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextHighScore > 49) begin
-                deconcatenate = nextHighScore - 50;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 5;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextHighScore > 39) begin
-                deconcatenate = nextHighScore - 40;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens = 4;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextHighScore > 29) begin
-                deconcatenate = nextHighScore - 30;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens= 3;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextHighScore > 19) begin
-                deconcatenate = nextHighScore - 20;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens = 2;
-                next_bcd_hundreds = 0;
-            end
-            else if (nextHighScore > 9) begin
-                deconcatenate = nextHighScore - 10;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens = 1;
-                next_bcd_hundreds = 0;
-            end else begin
-                deconcatenate = nextHighScore;
-                next_bcd_ones = deconcatenate[3:0];
-                next_bcd_tens = 0;
-                next_bcd_hundreds = 0;
-            end
-        end
-        if(goodColl == 0 || last_collision == 1) begin
-            current_collision = 0;
-        end
-        if (!isGameComplete_nxt) begin
-                nextDispScore = nextCurrScore;
-            end else begin
-                nextDispScore = nextHighScore;
-            if (nextCurrScore > nextHighScore) begin
-                nextHighScore = nextCurrScore;
-            end
-        end
-    end
-
-    assign current_score = currScore;
 endmodule
 
+module sound_fsm(
+    input logic clk, nRst, goodColl, badColl, button,
+    input logic [3:0] direction,
+    output logic playSound,
+    output MODE_TYPES mode_o // current state
+);
+MODE_TYPES next_state;
+logic next_playSound;
+always_ff @(posedge clk, negedge nRst) begin
+    if (~nRst) begin
+        mode_o <= ON;
+        playSound <= 0;
+    end else begin
+        mode_o <= next_state;
+        playSound <= next_playSound;
+    end
+end
+
+always_comb begin
+    next_playSound = playSound;
+    next_state = mode_o;
+    if (mode_o == ON) begin
+        if (button) begin
+            next_state = OFF;
+        end
+        next_playSound = (goodColl || badColl || |direction) ? 1'b1 : 1'b0;
+    end else begin
+        if (button) begin
+            next_state = ON;
+        end
+        next_playSound = 1'b0;
+    end
+end
+   
+endmodule
+
+module oscillator
+#(
+    parameter N = 8
+)
+(
+    input logic clk, nRst,
+    input logic [7:0] freq,
+    input MODE_TYPES state,
+    input logic playSound,
+    output logic at_max
+);
+logic [N - 1:0] count, count_nxt;
+logic at_max_nxt;
+always_ff @(posedge clk, negedge nRst) begin
+    if (~nRst) begin
+        count <= 0;
+        at_max <= 0;
+    end else begin
+        count <= count_nxt;
+        at_max <= at_max_nxt;
+    end
+end
+always_comb begin
+    at_max_nxt = at_max;
+    count_nxt = count;
+    if (at_max == 1'b1) begin
+        at_max_nxt = 1'b0;
+    end
+    if (state == ON && playSound) begin
+        if (count < freq) begin
+            count_nxt = count + 1;
+        end else if (count >= freq) begin 
+            at_max_nxt = 1'b1;
+            count_nxt = 0;
+        end
+    end else if (state == OFF || ~playSound) begin
+        count_nxt = 0;
+        at_max_nxt = 1'b0;
+    end
+end
+
+endmodule
