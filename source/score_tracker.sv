@@ -8,7 +8,7 @@ module score_tracker(
     logic [6:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
     logic [6:0] currScore, highScore, nextLength;
     logic isGameComplete_nxt;
-    logic [3:0] carry, next_bcd_ones, next_bcd_tens;
+    logic [3:0] next_bcd_ones, next_bcd_tens;
     assign maxScore = 7'd50;
    
     always_ff @(posedge clk, negedge nRst) begin

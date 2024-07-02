@@ -95,17 +95,17 @@ always_ff @(posedge clk, negedge nRst) begin
 end
 assign posEdge = N & ~sig_out | (N & sig_out);
 
-assign goodColl = N[6];
-assign badColl = N[5];
-assign button = N[4];
-assign direction = N[3:0];
+assign goodColl = N[6] & ~sig_out[6] | (N[6] & sig_out[6]);
+assign badColl = N[5] & ~sig_out[5] | (N[5] & sig_out[5]);
+assign button = N[4] & ~sig_out[4];
+assign direction = N[3:0] & ~sig_out[3:0] | (N[3:0] & sig_out[3:0]);
 
 endmodule
 
 module freq_selector(
-    input logic goodColl_i, badColl_i, 
+    input logic goodColl_i, badColl_i,
     input logic [3:0] direction_i,
-    output logic [8:0] freq
+    output logic [7:0] freq
 );
 
 always_comb begin
@@ -181,6 +181,9 @@ end
 always_comb begin
     at_max_nxt = at_max;
     count_nxt = count;
+    if (at_max == 1'b1) begin
+        at_max_nxt = 1'b0;
+    end
     if (state == ON && playSound) begin
         if (count < freq) begin
             count_nxt = count + 1;
@@ -188,7 +191,7 @@ always_comb begin
             at_max_nxt = 1'b1;
             count_nxt = 0;
         end
-    end else begin
+    end else if (state == OFF || ~playSound) begin
         count_nxt = 0;
         at_max_nxt = 1'b0;
     end

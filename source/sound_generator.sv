@@ -1,7 +1,7 @@
-typedef enum logic {
-    OFF = 1'b0,
-    ON = 1'b1
-} MODE_TYPES;
+//typedef enum logic {
+    //OFF = 1'b0,
+    //ON = 1'b1
+//} MODE_TYPES;
 
 module sound_generator
 #(

@@ -9,13 +9,13 @@ export LD_LIBRARY_PATH := /home/shay/a/ece270/lib:$(LD_LIBRARY_PATH)
 
 # Specify the name of the top level file
 # (do not include the source folder in the name)
-TOP_FILE		:= sound_generator.sv
+TOP_FILE		:= 
 # Specify the name of component or sub-module files
 # (do not include the source folder in the name)
-COMPONENT_FILES	:=  posedge_detector.sv freq_selector.sv sound_fsm.sv oscillator.sv dac_counter.sv
+COMPONENT_FILES	:= 
 # Specify the top level testbench to be simulated
 # (do not include the source folder in the name)
-TB 				:= tb_sound_generator.sv
+TB 				:= 
 
 # Directories where source code is located
 SRC 			:= source
