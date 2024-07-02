@@ -22,7 +22,7 @@ module tb_oscillator ();
     // DUT ports
     logic tb_clk, tb_nRst_i;
     logic tb_playSound;
-    logic [8:0] tb_freq;
+    logic [7:0] tb_freq;
     logic tb_at_max;
     logic tb_mode_o;
 
@@ -76,7 +76,7 @@ module tb_oscillator ();
 
         // Initialize test bench signals
         tb_nRst_i = 1'b1;
-        tb_freq = 9'b0;
+        tb_freq = 8'b0;
         tb_playSound = 1'b0;
         tb_mode_o = ON;
         tb_checking_outputs = 1'b0;
@@ -120,7 +120,7 @@ module tb_oscillator ();
         $display("\n\n%s", tb_test_case);
 
         tb_playSound = 1'b1;
-        tb_freq = 9'd440; // A
+        tb_freq = 8'd89; // A
         #(CLK_PERIOD * 84);
         check_at_max(1'b0);
 
@@ -139,7 +139,7 @@ module tb_oscillator ();
         $display("\n\n%s", tb_test_case);
 
         tb_playSound = 1'b1;
-        tb_freq = 9'd311; // D Sharp
+        tb_freq = 8'd126; // D Sharp
         #(CLK_PERIOD * 120);
         check_at_max(1'b0);
 
@@ -158,7 +158,7 @@ module tb_oscillator ();
         $display("\n\n%s", tb_test_case);
 
         tb_playSound = 1'b1;
-        tb_freq = 9'd262; // C
+        tb_freq = 8'd149; // C
         #(CLK_PERIOD * 145);
         //check_at_max(1'b0);
 
@@ -177,8 +177,8 @@ module tb_oscillator ();
         #(CLK_PERIOD * 10); // allow for some delay
         $display("\n\n%s", tb_test_case);
         tb_playSound = 1'b0;
-        tb_freq = 9'd262; // C
-        #(CLK_PERIOD * 150);
+        tb_freq = 8'd149; // C
+        #(CLK_PERIOD * 300);
 $finish; 
     end
 endmodule 

@@ -47,22 +47,6 @@ module tb_sound_generator ();
     end
     endtask
 
-    // Task to check mode output
-    // task check_mode_o;
-    // input logic expected_mode; 
-    // input string string_mode; 
-    // begin
-    //     @(negedge tb_clk); 
-    //     tb_checking_outputs = 1'b1; 
-    //     if(tb_mode_o == expected_mode)
-    //         $info("Correct Mode: %s.", string_mode);
-    //     else
-    //         $error("Incorrect mode. Expected: %s. Actual: %s.", string_mode, tb_mode_o); 
-        
-    //     #(1);
-        
-    // end
-    // endtask
 
     // Task to check sound toggle output
     task check_dacCount;
@@ -147,27 +131,23 @@ module tb_sound_generator ();
 
         tb_goodColl = 1'b1;
         #(CLK_PERIOD * 300); // allow for some delay
-        //check_playSound(1'b1);
         tb_goodColl = 1'b0;
 
         #(CLK_PERIOD * 50);
 
         tb_badColl = 1'b1;
         #(CLK_PERIOD * 300); // allow for some delay
-        //check_playSound(1'b1);
         tb_badColl = 1'b0;
 
         #(CLK_PERIOD * 50);
 
         tb_direction = 4'b0001;
         #(CLK_PERIOD * 300); // allow for some delay
-        //check_playSound(1'b1);
         tb_direction = 4'b0000;
 
 
         #(CLK_PERIOD * 50);
         #(CLK_PERIOD); // allow for some delay
-        //check_playSound(1'b0);
 
         // ************************************************************************
         // Test Case 2: Test Toggle ON/OFF
@@ -177,26 +157,20 @@ module tb_sound_generator ();
         // $display("\n\n%s", tb_test_case);
 
          single_button_press();
-        // check_mode_o(OFF, "OFF");
 
          tb_goodColl = 1'b1;
          #(CLK_PERIOD * 300); // allow for some delay
-        // check_playSound(1'b0);
          tb_goodColl = 1'b0;
 
          tb_badColl = 1'b1;
          #(CLK_PERIOD * 300); // allow for some delay
-        // check_playSound(1'b0);
          tb_badColl = 1'b0;
 
          tb_direction = 4'b0001;
          #(CLK_PERIOD * 300); // allow for some delay
-        // check_playSound(1'b0);
          tb_direction = 4'b0000;
 
-        // #(CLK_PERIOD * 20);
         single_button_press();
-        // check_mode_o(ON, "ON");
         $finish; 
     end
 

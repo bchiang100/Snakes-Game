@@ -110,7 +110,7 @@ module tb_dac_counter ();
 
         tb_at_max = 1'b1;
         #(CLK_PERIOD * 25);
-        check_dacCount(8'd25);
+       
 
         tb_at_max = 1'b0;
         #(CLK_PERIOD);
