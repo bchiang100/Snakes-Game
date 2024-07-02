@@ -150,14 +150,14 @@ module tb_sound_generator ();
         //check_playSound(1'b1);
         tb_goodColl = 1'b0;
 
-        #(CLK_PERIOD * 20);
+        #(CLK_PERIOD * 50);
 
         tb_badColl = 1'b1;
         #(CLK_PERIOD * 300); // allow for some delay
         //check_playSound(1'b1);
         tb_badColl = 1'b0;
 
-        #(CLK_PERIOD * 20);
+        #(CLK_PERIOD * 50);
 
         tb_direction = 4'b0001;
         #(CLK_PERIOD * 300); // allow for some delay
@@ -165,7 +165,7 @@ module tb_sound_generator ();
         tb_direction = 4'b0000;
 
 
-        #(CLK_PERIOD * 20);
+        #(CLK_PERIOD * 50);
         #(CLK_PERIOD); // allow for some delay
         //check_playSound(1'b0);
 
@@ -176,26 +176,26 @@ module tb_sound_generator ();
         // tb_test_case = "Test Case 1: Test Toggle ON/OFF";
         // $display("\n\n%s", tb_test_case);
 
-        // single_button_press();
+         single_button_press();
         // check_mode_o(OFF, "OFF");
 
-        // tb_goodColl = 1'b1;
-        // #(CLK_PERIOD); // allow for some delay
+         tb_goodColl = 1'b1;
+         #(CLK_PERIOD * 300); // allow for some delay
         // check_playSound(1'b0);
-        // tb_goodColl = 1'b0;
+         tb_goodColl = 1'b0;
 
-        // tb_badColl = 1'b1;
-        // #(CLK_PERIOD); // allow for some delay
+         tb_badColl = 1'b1;
+         #(CLK_PERIOD * 300); // allow for some delay
         // check_playSound(1'b0);
-        // tb_badColl = 1'b0;
+         tb_badColl = 1'b0;
 
-        // tb_direction = 4'b0001;
-        // #(CLK_PERIOD); // allow for some delay
+         tb_direction = 4'b0001;
+         #(CLK_PERIOD * 300); // allow for some delay
         // check_playSound(1'b0);
-        // tb_direction = 4'b0000;
+         tb_direction = 4'b0000;
 
-        // #(CLK_PERIOD);
-        // single_button_press();
+        // #(CLK_PERIOD * 20);
+        single_button_press();
         // check_mode_o(ON, "ON");
         $finish; 
     end

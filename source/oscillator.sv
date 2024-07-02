@@ -28,15 +28,14 @@ end
 always_comb begin
     at_max_nxt = at_max;
     count_nxt = count;
-    if (state == ON && playSound)
+    if (state == ON && playSound) begin
         if (count < freq) begin
             count_nxt = count + 1;
         end else if (count >= freq) begin 
             at_max_nxt = 1'b1;
             count_nxt = 0;
         end
-    else begin
-        count_nxt = 0;
+    end else begin
         at_max_nxt = 1'b0;
     end
 end

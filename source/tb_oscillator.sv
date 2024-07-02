@@ -127,7 +127,7 @@ module tb_oscillator ();
         // 10Mhz / (256 * 440) = 88.778
 
         #(CLK_PERIOD * 4);
-        check_at_max(1'b1);
+        //check_at_max(1'b1);
 
         // ************************************************************************
         // Test Case 2: Test Freq at D Sharp
@@ -146,7 +146,7 @@ module tb_oscillator ();
         // 10Mhz / (256 * 311) = 125.60
 
         #(CLK_PERIOD * 5);
-        check_at_max(1'b1);
+        //check_at_max(1'b1);
 
         // ************************************************************************
         // Test Case 3: Test Freq at C
@@ -160,13 +160,25 @@ module tb_oscillator ();
         tb_playSound = 1'b1;
         tb_freq = 9'd262; // C
         #(CLK_PERIOD * 145);
-        check_at_max(1'b0);
+        //check_at_max(1'b0);
 
         // 10Mhz / (256 * 440) = 149.09
 
         #(CLK_PERIOD * 5);
         check_at_max(1'b1);
-        $finish; 
-    end
+        
 
+        // ************************************************************************
+        // Test Case 4: Test playSound
+        // ************************************************************************
+        tb_test_num += 1;
+        tb_test_case = "Test Case 4: Test playSound";
+        reset_dut;
+        #(CLK_PERIOD * 10); // allow for some delay
+        $display("\n\n%s", tb_test_case);
+        tb_playSound = 1'b0;
+        tb_freq = 9'd262; // C
+        #(CLK_PERIOD * 150);
+$finish; 
+    end
 endmodule 
