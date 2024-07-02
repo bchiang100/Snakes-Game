@@ -93,7 +93,7 @@ always_ff @(posedge clk, negedge nRst) begin
         sig_out <= N;
     end
 end
-assign posEdge = N & ~sig_out;
+assign posEdge = N & ~sig_out | (N & sig_out);
 
 assign goodColl = N[6];
 assign badColl = N[5];
@@ -182,9 +182,9 @@ always_comb begin
     at_max_nxt = at_max;
     count_nxt = count;
     if (state == ON && playSound)
-        if (count < freq) begin// fix this
+        if (count < freq) begin
             count_nxt = count + 1;
-        end else if (count >= freq) begin // fix this
+        end else if (count >= freq) begin 
             at_max_nxt = 1'b1;
         end
     else begin

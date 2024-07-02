@@ -7,11 +7,11 @@ module freq_selector(
 always_comb begin
     freq = 0;
     if (goodColl_i)
-        freq = 9'd440; // A
+        freq = 8'd89; // 10M / ((1/440) / 256) - A
     if (badColl_i)
-        freq = 9'd311; // D Sharp
+        freq = 8'd126; // 10M / ((1/311) / 256) - D Sharp
     if (|direction_i)
-        freq = 9'd262; // C
+        freq = 8'd149; // 10M / ((1/262) / 256) - C
 end
 
 endmodule
