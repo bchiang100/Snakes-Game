@@ -24,7 +24,7 @@ module top (
     logic [3:0] direction_i;
     logic [3:0] newDirection;
 
-    logic [8:0] freq;
+    logic [7:0] freq;
     logic playSound;
     MODE_TYPES mode_o;
     logic at_max;
@@ -111,11 +111,11 @@ module freq_selector(
 always_comb begin
     freq = 0;
     if (goodColl_i)
-        freq = 9'd440; // A
+        freq = 8'd89; // 10M / ((1/440) / 256) - A
     if (badColl_i)
-        freq = 9'd311; // D Sharp
+        freq = 8'd126; // 10M / ((1/311) / 256) - D Sharp
     if (|direction_i)
-        freq = 9'd262; // C
+        freq = 8'd149; // 10M / ((1/262) / 256) - C
 end
 
 endmodule
@@ -162,31 +162,34 @@ module oscillator
 )
 (
     input logic clk, nRst,
-    input logic [8:0] freq,
+    input logic [7:0] freq,
     input MODE_TYPES state,
     input logic playSound,
     output logic at_max
 );
 logic [N - 1:0] count, count_nxt;
+logic at_max_nxt;
 always_ff @(posedge clk, negedge nRst) begin
     if (~nRst) begin
         count <= 0;
+        at_max <= 0;
     end else begin
         count <= count_nxt;
+        at_max <= at_max_nxt;
     end
 end
 always_comb begin
-    at_max = 1'b0;
+    at_max_nxt = at_max;
     count_nxt = count;
-    if (state == ON)
-        if ({16'b0, count} < 10000000 / (256 * freq) && playSound) begin// fix this
+    if (state == ON && playSound)
+        if (count < freq) begin// fix this
             count_nxt = count + 1;
-        end else if ({16'b0, count} >= 10000000 / (256 * freq)) begin // fix this
-            at_max = 1'b1;
+        end else if (count >= freq) begin // fix this
+            at_max_nxt = 1'b1;
         end
     else begin
         count_nxt = 0;
-        at_max = 1'b0;
+        at_max_nxt = 1'b0;
     end
 end
 
