@@ -33,6 +33,7 @@ always_comb begin
             count_nxt = count + 1;
         end else if (count >= freq) begin 
             at_max_nxt = 1'b1;
+            count_nxt = 0;
         end
     else begin
         count_nxt = 0;
