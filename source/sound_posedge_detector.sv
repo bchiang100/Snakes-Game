@@ -1,4 +1,4 @@
-module posedge_detector (
+module sound_posedge_detector (
     input logic clk, nRst, goodColl_i, badColl_i, button_i,
     input logic [3:0] direction_i,
     output logic goodColl, badColl, button,

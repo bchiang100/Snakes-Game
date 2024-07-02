@@ -8,9 +8,9 @@ module sound_generator
     parameter N = 8
 )
 (
-    input logic clk, nRst, goodColl_i, badColl_i, button_i,
+    input logic clk, rst, goodColl_i, badColl_i, button_i,
     input logic [3:0] direction_i,
-    output logic [N - 1:0] dacCount
+    output logic [N - 1:0] soundOut
 );
 
     logic goodColl, badColl, toggleMode;
@@ -20,7 +20,6 @@ module sound_generator
     logic playSound;
     MODE_TYPES mode_o;
     logic at_max;
-    logic [7:0] soundOut;
 
     posedge_detector posDetector1 (.clk(clk), .nRst(~rst), .button_i(toggleMode_i), .button(toggleMode), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .direction_i(direction_i), .goodColl(goodColl), .badColl(badColl), .direction(newDirection));
     freq_selector_12M freq_12 (.freq(freq), .goodColl_i(goodColl_i), .badColl_i(badColl_i), .direction_i(direction_i));
