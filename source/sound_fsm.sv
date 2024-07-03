@@ -1,8 +1,4 @@
-typedef enum logic {
-    OFF = 1'b0,
-    ON = 1'b1
-} MODE_TYPES;
-
+// NOTE: MODULE IS NOT IN USE
 module sound_fsm(
     input logic clk, nRst, goodColl, badColl, button,
     input logic [3:0] direction,
