@@ -1,3 +1,4 @@
+// NOTE: MODULE IS 
 module freq_selector_12M(
     input logic goodColl_i, badColl_i,
     input logic [3:0] direction_i,

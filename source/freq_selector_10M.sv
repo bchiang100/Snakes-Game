@@ -1,3 +1,4 @@
+// NOTE: MODULE IS MERGED WITH OSCILLATOR MODULE
 module freq_selector_10M(
     input logic goodColl_i, badColl_i,
     input logic [3:0] direction_i,
