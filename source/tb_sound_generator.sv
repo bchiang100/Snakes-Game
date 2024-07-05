@@ -20,19 +20,19 @@ module tb_sound_generator ();
     string tb_test_case;
 
     // DUT ports
-    logic tb_clk, tb_nRst_i;
+    logic tb_clk, tb_rst_i;
     logic tb_goodColl, tb_badColl, tb_button;
     logic [3:0] tb_direction;
-    logic [7:0] tb_dacCount;
+    logic [7:0] tb_soundOut;
 
 
     // Reset DUT Task
     task reset_dut;
         @(negedge tb_clk);
-        tb_nRst_i = 1'b0; 
+        tb_rst_i = 1'b0; 
         @(negedge tb_clk);
         @(negedge tb_clk);
-        tb_nRst_i = 1'b1;
+        tb_rst_i = 1'b1;
         @(posedge tb_clk);
     endtask
     
@@ -50,14 +50,14 @@ module tb_sound_generator ();
 
     // Task to check sound toggle output
     task check_dacCount;
-    input logic exp_dacCount; 
+    input logic exp_soundOut; 
     begin
         @(negedge tb_clk);
         tb_checking_outputs = 1'b1;
-        if(tb_dacCount== exp_dacCount)
-            $info("Correct playSound: %0d.", exp_dacCount);
+        if(tb_soundOut== exp_soundOut)
+            $info("Correct playSound: %0d.", exp_soundOut);
         else
-            $error("Incorrect mode. Expected: %0d. Actual: %0d.", exp_dacCount, tb_dacCount); 
+            $error("Incorrect mode. Expected: %0d. Actual: %0d.", exp_soundOut, tb_soundOut); 
         #(1);
         tb_checking_outputs = 1'b0;  
     end
@@ -73,12 +73,12 @@ module tb_sound_generator ();
 
     // DUT Portmap
     sound_generator DUT(.clk(tb_clk),
-                .nRst(tb_nRst_i),
+                .rst(tb_rst_i),
                 .button_i(tb_button),
                 .goodColl_i(tb_goodColl),
                 .badColl_i(tb_badColl),
                 .direction_i(tb_direction),
-                .dacCount(tb_dacCount));
+                .soundOut(tb_soundOut));
                 
 
     // Main Test Bench Process
@@ -89,7 +89,7 @@ module tb_sound_generator ();
 
         // Initialize test bench signals
         tb_button = 1'b0; 
-        tb_nRst_i = 1'b1;
+        tb_rst_i = 1'b1;
         tb_checking_outputs = 1'b0;
         tb_test_num = -1;
         tb_test_case = "Initializing";
@@ -104,7 +104,7 @@ module tb_sound_generator ();
         tb_test_case = "Test Case 0: Power-on-Reset of the DUT";
         $display("\n\n%s", tb_test_case);
 
-        tb_nRst_i = 1'b0;  // activate reset
+        tb_rst_i = 1'b0;  // activate reset
 
         // Wait for a bit before checking for correct functionality
         #(2);
@@ -117,40 +117,12 @@ module tb_sound_generator ();
 
         // Release the reset away from a clock edge
         @(negedge tb_clk);
-        tb_nRst_i  = 1'b1;   // Deactivate the chip reset
+        tb_rst_i  = 1'b1;   // Deactivate the chip reset
         // Check that internal state was correctly keep after reset release
         check_dacCount('0);
 
-
         // ************************************************************************
-        // Test Case 1: Test playSound
-        // ************************************************************************
-        tb_test_num += 1;
-        tb_test_case = "Test Case 1: Test playSound";
-        $display("\n\n%s", tb_test_case);
-
-        tb_goodColl = 1'b1;
-        #(CLK_PERIOD * 300); // allow for some delay
-        tb_goodColl = 1'b0;
-
-        #(CLK_PERIOD * 50);
-
-        tb_badColl = 1'b1;
-        #(CLK_PERIOD * 300); // allow for some delay
-        tb_badColl = 1'b0;
-
-        #(CLK_PERIOD * 50);
-
-        tb_direction = 4'b0001;
-        #(CLK_PERIOD * 300); // allow for some delay
-        tb_direction = 4'b0000;
-
-
-        #(CLK_PERIOD * 50);
-        #(CLK_PERIOD); // allow for some delay
-
-        // ************************************************************************
-        // Test Case 2: Test Toggle ON/OFF
+        // Test Case 1: Test soundOut
         // ************************************************************************
         // tb_test_num += 1;
         // tb_test_case = "Test Case 1: Test Toggle ON/OFF";
@@ -159,15 +131,19 @@ module tb_sound_generator ();
          single_button_press();
 
          tb_goodColl = 1'b1;
-         #(CLK_PERIOD * 300); // allow for some delay
+         #(CLK_PERIOD * 500); // allow for some delay
          tb_goodColl = 1'b0;
 
+        #(CLK_PERIOD * 20);
+
          tb_badColl = 1'b1;
-         #(CLK_PERIOD * 300); // allow for some delay
+         #(CLK_PERIOD * 500); // allow for some delay
          tb_badColl = 1'b0;
 
+        #(CLK_PERIOD * 20);
+
          tb_direction = 4'b0001;
-         #(CLK_PERIOD * 300); // allow for some delay
+         #(CLK_PERIOD * 500); // allow for some delay
          tb_direction = 4'b0000;
 
         single_button_press();
