@@ -24,17 +24,18 @@ module top
     logic button;
     logic [1:0] blinkToggle;
     logic goodCollButton, badCollButton;
-
+    logic delayFlash;
     // BCD conversion using BCD adders
     logic [3:0] bcd_ones, bcd_tens, bcd_hundreds;
     
     
+    
     score_posedge_detector posDetector2 (.clk(clk), .nRst(~rst), .goodColl_i(pb[0]), .badColl_i(pb[1]), .goodColl(goodCollButton), .badColl(badCollButton));
     // Score tracker instance
-    score_tracker3 track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(), .current_score(), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
+    score_tracker3 track1 (.delayFlash(delayFlash), .clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(), .current_score(), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
 
     // Toggle Screen
-    toggle_screen toggle1(.displayOut(displayOut), .blinkToggle(blinkToggle), .clk(clk), .rst(rst), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
+    toggle_screen toggle1(.displayOut(displayOut), .blinkToggle(blinkToggle & {1'b0, delayFlash}), .clk(clk), .rst(rst), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
     // Display BCD digits on seven-segment displays with fast blinking
     ssdec ssdec1(.in(displayOut), .enable(blinkToggle == 1), .out(ss0[6:0]));
     ssdec ssdec2(.in(displayOut), .enable(blinkToggle == 2), .out(ss1[6:0]));
@@ -142,12 +143,15 @@ module score_tracker3(
     output logic [7:0] current_score,
     output logic [7:0] dispScore,
     output logic [3:0] bcd_ones, bcd_tens, bcd_hundreds,
-    output logic isGameComplete
+    output logic isGameComplete,
+    output logic delayFlash
 );
     logic [7:0] nextCurrScore, nextHighScore, maxScore, deconcatenate;
     logic [7:0] currScore, highScore, nextDispScore;
     logic isGameComplete_nxt, last_collision, current_collision;
     logic [3:0] carry, next_bcd_ones, next_bcd_tens, next_bcd_hundreds;
+    logic [26:0] dispDelayCounter, dispDelayCounter_nxt;
+    logic delayFlash_nxt;
     assign maxScore = 8'd140;
    
     always_ff @(posedge clk, negedge nRst) begin
@@ -155,7 +159,9 @@ module score_tracker3(
             currScore <= 8'b0;
             highScore <= 8'b0;
             dispScore <= 8'b0;
-            //isGameComplete <= 1'b0;
+            dispDelayCounter <= 27'b0;
+            delayFlash <= 1;
+            isGameComplete <= 1'b0;
             bcd_ones <= 0;
             bcd_tens <= 0;
             bcd_hundreds <= 0;
@@ -163,31 +169,37 @@ module score_tracker3(
         end else begin
             currScore <= nextCurrScore;
             highScore <= nextHighScore;
-            //isGameComplete <= isGameComplete_nxt;
+            isGameComplete <= isGameComplete_nxt;
             dispScore <= nextDispScore;
             bcd_ones <= next_bcd_ones;
             bcd_tens <= next_bcd_tens;
             bcd_hundreds <= next_bcd_hundreds;
             last_collision <= current_collision;
+            dispDelayCounter <= dispDelayCounter_nxt;
+            delayFlash <= delayFlash_nxt;
         end
     end
 
     always_comb begin
         nextCurrScore = currScore;
-        isGameComplete = 1'b0;
+        isGameComplete_nxt = isGameComplete;
         nextHighScore = highScore;
         next_bcd_ones = bcd_ones;
         next_bcd_tens = bcd_tens;
         next_bcd_hundreds = bcd_hundreds;
         deconcatenate = 0;
         current_collision = last_collision;
+        dispDelayCounter_nxt = dispDelayCounter;
+        delayFlash_nxt = delayFlash;
         
         if (goodColl && last_collision == 0) begin
-            isGameComplete = 1'b0;
+            isGameComplete_nxt = 1'b0;
             nextCurrScore = currScore + 1;
             current_collision = 1;
             
             if (nextCurrScore > 139) begin
+                deconcatenate = nextCurrScore - 140;
+                next_bcd_ones = deconcatenate[3:0];
                 next_bcd_tens= 1;
                 next_bcd_hundreds = 1;
             end
@@ -206,6 +218,8 @@ module score_tracker3(
             else if (nextCurrScore > 109) begin
                 deconcatenate = nextCurrScore - 110;
                 next_bcd_ones = deconcatenate[3:0];
+                next_bcd_tens = 1;
+                next_bcd_hundreds = 1;
             end
             else if (nextCurrScore > 99) begin
                 deconcatenate = nextCurrScore - 100;
@@ -276,10 +290,26 @@ module score_tracker3(
                 nextHighScore = nextCurrScore;
             end
         end
-        if (badColl || currScore >= maxScore) begin
+        if ((badColl || currScore >= maxScore)) begin
+            isGameComplete_nxt = 1'b1;
+            
+        end
+        if (isGameComplete) begin
+            dispDelayCounter_nxt = dispDelayCounter + 1;
+            //WORK IN PROGRESS
+            delayFlash_nxt = (dispDelayCounter > 0 && dispDelayCounter < 1000000) ? 0 : 1;
+            delayFlash_nxt = (dispDelayCounter >= 1000000 && dispDelayCounter < 2000000) ? 1:0;
+            delayFlash_nxt = (dispDelayCounter >= 2000000 && dispDelayCounter < 3000000) ? 0:1;
+            delayFlash_nxt = (dispDelayCounter >= 3000000 && dispDelayCounter < 4000000)? 1:0;
+            delayFlash_nxt = (dispDelayCounter >= 4000000 && dispDelayCounter < 5000000)? 0:1;
+            delayFlash_nxt = (dispDelayCounter >= 5000000 && dispDelayCounter < 6000000)?1:0;
+            delayFlash_nxt = (dispDelayCounter >= 6000000 && dispDelayCounter < 7000000)?0:1;
+            delayFlash_nxt = (dispDelayCounter >= 7000000 && dispDelayCounter < 8000000)?1:0;
+        end
+        if (dispDelayCounter > 80000000) begin
             nextCurrScore = 0;
-            isGameComplete = 1'b1;
-
+            //isGameComplete = 1'b1;
+            dispDelayCounter_nxt = 0;
             if (nextHighScore > 139) begin
                 deconcatenate = nextHighScore - 140;
                 next_bcd_ones = deconcatenate[3:0];

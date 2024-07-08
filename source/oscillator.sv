@@ -4,7 +4,7 @@ module oscillator
 )
 (
     input logic clk, nRst,
-    input MODE_TYPES state,
+   
     input logic goodColl, badColl,
     output logic at_max
 );
@@ -41,11 +41,11 @@ always_comb begin
     freq_nxt = freq;
     // 12Mhz is for FPGA, 10Mhz is for final chip
     if (goodColl && ~keepCounting) begin
-        freq_nxt = 8'd109; // 12M / 1/((1/432) / 256) - (SWITCH OUT TO 90 FOR FINAL)
-        timer_nxt = 4000000;
+        freq_nxt = 8'd89; // 12M / 1/((1/440) / 256) - (SWITCH OUT TO 89 FOR FINAL)
+        timer_nxt = 3000000;
     end
     if (badColl && ~keepCounting) begin
-        freq_nxt = 8'd188; // 12M / 1/((1/250) / 256) - (SWITCH OUT TO 156 FOR FINAL)
+        freq_nxt = 8'd156; // 12M / 1/((1/250) / 256) - (SWITCH OUT TO 156 FOR FINAL)
         timer_nxt = 10000000;
     end
 
