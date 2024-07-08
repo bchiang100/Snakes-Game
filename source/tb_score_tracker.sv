@@ -16,8 +16,10 @@ module tb_score_tracker ();
     // DUT ports
     logic tb_clk, tb_nRst_i;
     logic tb_goodColl, tb_badColl;
-    logic [6:0] tb_dispScore;
+    logic [7:0] tb_dispScore;
+    logic [7:0] tb_current_score;
     logic tb_isGameComplete;
+    logic [3:0] tb_bcd_ones, tb_bcd_tens, tb_bcd_hundreds;
 
 
     // Reset DUT Task
@@ -32,7 +34,7 @@ module tb_score_tracker ();
     
 // Task to check current score output
     task check_dispScore;
-    input logic[6:0] exp_dispScore; 
+    input logic[7:0] exp_dispScore; 
     begin
         @(negedge tb_clk);
         tb_checking_outputs = 1'b1;
@@ -55,11 +57,15 @@ module tb_score_tracker ();
     end
 
     // DUT Portmap
-    score_tracker DUT(.clk(tb_clk),
+    score_tracker3 DUT(.clk(tb_clk),
                 .nRst(tb_nRst_i),
+                .bcd_ones(tb_bcd_ones),
+                .bcd_tens(tb_bcd_tens),
+                .bcd_hundreds(tb_bcd_hundreds),
                 .goodColl(tb_goodColl),
                 .badColl(tb_badColl),
                 .dispScore(tb_dispScore),
+                .current_score(tb_current_score),
                 .isGameComplete(tb_isGameComplete)); 
 
     // Main Test Bench Process
@@ -135,7 +141,7 @@ module tb_score_tracker ();
         tb_goodColl = 1'b1;
         #(CLK_PERIOD); // allow for some delay
         tb_goodColl = 1'b0;
-        check_dispScore(7'b1); 
+        check_dispScore(8'b1); 
         
 
         // Snake collides with border
@@ -143,7 +149,7 @@ module tb_score_tracker ();
         #(CLK_PERIOD); // allow for some delay
         tb_badColl = 1'b0;
         
-        check_dispScore(7'd1); 
+        check_dispScore(8'd1); 
 
         // ************************************************************************
         // Test Case 3: Test highScore Override
@@ -158,14 +164,14 @@ module tb_score_tracker ();
         tb_goodColl = 1'b1;
         #(CLK_PERIOD); // allow for some delay
         tb_goodColl = 1'b0;
-        check_dispScore(7'b1); 
+        check_dispScore(8'b1); 
         
 
         // Snake eats apple #2
         tb_goodColl = 1'b1;
         #(CLK_PERIOD); // allow for some delay
         tb_goodColl = 1'b0;
-        check_dispScore(7'd2); 
+        check_dispScore(8'd2); 
         
 
         // Snake collides with border and ends game
@@ -173,34 +179,34 @@ module tb_score_tracker ();
         #(CLK_PERIOD); // allow for some delay
         tb_badColl = 1'b0;
         
-        check_dispScore(7'd2); 
+        check_dispScore(8'd2); 
         
         // Snake eats apple #1
         tb_goodColl = 1'b1;
         #(CLK_PERIOD); // allow for some delay
         tb_goodColl = 1'b0;
-        check_dispScore(7'b1); 
+        check_dispScore(8'b1); 
         
 
         // Snake eats apple #2
         tb_goodColl = 1'b1;
         #(CLK_PERIOD); // allow for some delay
         tb_goodColl = 1'b0;
-        check_dispScore(7'd2); 
+        check_dispScore(8'd2); 
        
 
         // Snake eats apple #3
         tb_goodColl = 1'b1;
         #(CLK_PERIOD); // allow for some delay
         tb_goodColl = 1'b0;
-        check_dispScore(7'd3); 
+        check_dispScore(8'd3); 
         
 
         // Snake eats apple #4
         tb_goodColl = 1'b1;
         #(CLK_PERIOD); // allow for some delay
         tb_goodColl = 1'b0;
-        check_dispScore(7'd4); 
+        check_dispScore(8'd4); 
        
         // Snake collides with border and ends game
         tb_badColl = 1'b1;
@@ -208,7 +214,7 @@ module tb_score_tracker ();
         tb_badColl = 1'b0;
 
         #(CLK_PERIOD * 5); // making sure the high score stays there
-        check_dispScore(7'd4);
+        check_dispScore(8'd4);
         $finish; 
     end
 
