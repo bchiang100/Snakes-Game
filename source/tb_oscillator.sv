@@ -121,7 +121,7 @@ module tb_oscillator ();
         tb_goodColl = 1'b0;
        
 
-        #(CLK_PERIOD * 500);
+        #(CLK_PERIOD * 700);
        
 
         // ************************************************************************
@@ -138,7 +138,7 @@ module tb_oscillator ();
         tb_badColl = 1'b0;
        
 
-        #(CLK_PERIOD * 500);
+        #(CLK_PERIOD * 1000);
 
 $finish; 
     end
