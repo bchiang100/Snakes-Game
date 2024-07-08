@@ -303,8 +303,8 @@ module score_tracker3(
             delayFlash_nxt = (dispDelayCounter >= 3000000 && dispDelayCounter < 4000000)? 1:0;
             delayFlash_nxt = (dispDelayCounter >= 4000000 && dispDelayCounter < 5000000)? 0:1;
             delayFlash_nxt = (dispDelayCounter >= 5000000 && dispDelayCounter < 6000000)?1:0;
-            delayFlash_nxt = (dispDelayCounter >= 6000000 && dispDelayCounter < 7000000)?0:1;
-            delayFlash_nxt = (dispDelayCounter >= 7000000 && dispDelayCounter < 8000000)?1:0;
+            delayFlash_nxt = (dispDelayCounter >= 6000000 && dispDelayCounter < 7000000)? 0:1;
+            delayFlash_nxt = (dispDelayCounter >= 7000000 && dispDelayCounter < 8000000)? 1:0;
         end
         if (dispDelayCounter > 80000000) begin
             nextCurrScore = 0;
