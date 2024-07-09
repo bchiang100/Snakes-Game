@@ -89,7 +89,9 @@ module tb_sound_generator ();
 
         // Initialize test bench signals
         tb_button = 1'b0; 
-        tb_rst_i = 1'b1;
+        tb_rst_i = 1'b0;
+        tb_goodColl = 1'b0;
+        tb_badColl = 1'b0;
         tb_checking_outputs = 1'b0;
         tb_test_num = -1;
         tb_test_case = "Initializing";
@@ -104,7 +106,7 @@ module tb_sound_generator ();
         tb_test_case = "Test Case 0: Power-on-Reset of the DUT";
         $display("\n\n%s", tb_test_case);
 
-        tb_rst_i = 1'b0;  // activate reset
+        tb_rst_i = 1'b1;  // activate reset
 
         // Wait for a bit before checking for correct functionality
         #(2);
@@ -117,7 +119,7 @@ module tb_sound_generator ();
 
         // Release the reset away from a clock edge
         @(negedge tb_clk);
-        tb_rst_i  = 1'b1;   // Deactivate the chip reset
+        tb_rst_i  = 1'b0;   // Deactivate the chip reset
         // Check that internal state was correctly keep after reset release
         check_dacCount('0);
 

@@ -16,9 +16,9 @@ module sound_generator
     logic goodColl, badColl, toggleMode;
     logic [3:0] newDirection;
 
-    logic [7:0] freq;
-    logic playSound;
-    MODE_TYPES mode_o;
+    //logic [7:0] freq;
+    //logic playSound;
+    //MODE_TYPES mode_o;
     logic at_max;
     logic notUsed;
 
