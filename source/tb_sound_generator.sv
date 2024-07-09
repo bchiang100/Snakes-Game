@@ -133,7 +133,7 @@ module tb_sound_generator ();
          tb_goodColl = 1'b1;
          #(CLK_PERIOD * 5);
          tb_goodColl = 1'b0;
-         #(CLK_PERIOD * 500); // allow for some delay
+         #(CLK_PERIOD * 5000); // allow for some delay
          
 
         #(CLK_PERIOD * 50);
@@ -141,13 +141,13 @@ module tb_sound_generator ();
          tb_badColl = 1'b1;
          #(CLK_PERIOD * 5);
          tb_badColl = 1'b0;
-         #(CLK_PERIOD * 500); // allow for some delay
+         #(CLK_PERIOD * 5000); // allow for some delay
          
 
         #(CLK_PERIOD * 50);
 
          tb_direction = 4'b0001;
-         #(CLK_PERIOD * 500);
+         #(CLK_PERIOD * 5000);
          tb_direction = 4'b0000;
          #(CLK_PERIOD * 100); // allow for some delay
          
