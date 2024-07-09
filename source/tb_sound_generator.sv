@@ -124,11 +124,12 @@ module tb_sound_generator ();
         // ************************************************************************
         // Test Case 1: Test soundOut
         // ************************************************************************
-        // tb_test_num += 1;
-        // tb_test_case = "Test Case 1: Test Toggle ON/OFF";
-        // $display("\n\n%s", tb_test_case);
+         tb_test_num += 1;
+         reset_dut;
+         tb_test_case = "Test Case 1: Test soundOut";
+         $display("\n\n%s", tb_test_case);
 
-         //single_button_press();
+        //single_button_press();
 
          tb_goodColl = 1'b1;
          #(CLK_PERIOD * 5);
