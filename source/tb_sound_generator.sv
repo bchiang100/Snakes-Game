@@ -73,7 +73,7 @@ module tb_sound_generator ();
 
     // DUT Portmap
     sound_generator DUT(.clk(tb_clk),
-                .rst(tb_rst_i),
+                .rst(~tb_rst_i),
                 .button_i(tb_button),
                 .goodColl_i(tb_goodColl),
                 .badColl_i(tb_badColl),
@@ -89,7 +89,7 @@ module tb_sound_generator ();
 
         // Initialize test bench signals
         tb_button = 1'b0; 
-        tb_rst_i = 1'b0;
+        tb_rst_i = 1'b1;
         tb_goodColl = 1'b0;
         tb_badColl = 1'b0;
         tb_checking_outputs = 1'b0;
@@ -106,7 +106,7 @@ module tb_sound_generator ();
         tb_test_case = "Test Case 0: Power-on-Reset of the DUT";
         $display("\n\n%s", tb_test_case);
 
-        tb_rst_i = 1'b1;  // activate reset
+        tb_rst_i = 1'b0;  // activate reset
 
         // Wait for a bit before checking for correct functionality
         #(2);
@@ -119,7 +119,7 @@ module tb_sound_generator ();
 
         // Release the reset away from a clock edge
         @(negedge tb_clk);
-        tb_rst_i  = 1'b0;   // Deactivate the chip reset
+        tb_rst_i  = 1'b1;   // Deactivate the chip reset
         // Check that internal state was correctly keep after reset release
         check_dacCount('0);
 
@@ -136,7 +136,7 @@ module tb_sound_generator ();
          tb_goodColl = 1'b1;
          #(CLK_PERIOD * 5);
          tb_goodColl = 1'b0;
-         #(CLK_PERIOD * 900000); // allow for some delay
+         #(CLK_PERIOD * 1000); // allow for some delay
          
 
         #(CLK_PERIOD * 50);
@@ -144,13 +144,13 @@ module tb_sound_generator ();
          tb_badColl = 1'b1;
          #(CLK_PERIOD * 5);
          tb_badColl = 1'b0;
-         #(CLK_PERIOD * 900000); // allow for some delay
+         #(CLK_PERIOD * 1000); // allow for some delay
          
 
         #(CLK_PERIOD * 50);
 
          tb_direction = 4'b0001;
-         #(CLK_PERIOD * 900000);
+         #(CLK_PERIOD * 1000);
          tb_direction = 4'b0000;
          #(CLK_PERIOD * 100); // allow for some delay
          
