@@ -128,25 +128,31 @@ module tb_sound_generator ();
         // tb_test_case = "Test Case 1: Test Toggle ON/OFF";
         // $display("\n\n%s", tb_test_case);
 
-         single_button_press();
+         //single_button_press();
 
          tb_goodColl = 1'b1;
-         #(CLK_PERIOD * 500); // allow for some delay
+         #(CLK_PERIOD * 5);
          tb_goodColl = 1'b0;
+         #(CLK_PERIOD * 500); // allow for some delay
+         
 
-        #(CLK_PERIOD * 20);
+        #(CLK_PERIOD * 50);
 
          tb_badColl = 1'b1;
-         #(CLK_PERIOD * 500); // allow for some delay
+         #(CLK_PERIOD * 5);
          tb_badColl = 1'b0;
+         #(CLK_PERIOD * 500); // allow for some delay
+         
 
-        #(CLK_PERIOD * 20);
+        #(CLK_PERIOD * 50);
 
          tb_direction = 4'b0001;
-         #(CLK_PERIOD * 500); // allow for some delay
+         #(CLK_PERIOD * 500);
          tb_direction = 4'b0000;
+         #(CLK_PERIOD * 100); // allow for some delay
+         
 
-        single_button_press();
+        //single_button_press();
         $finish; 
     end
 

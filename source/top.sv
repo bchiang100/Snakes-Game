@@ -1,3 +1,143 @@
+`default_nettype none
+
+module top 
+(
+    // I/O ports
+    input logic hz100, reset,
+    input logic [20:0] pb,
+    output logic [7:0] left, right,
+           ss7, ss6, ss5, ss4, ss3, ss2, ss1, ss0,
+    output logic red, green, blue,
+
+    // UART ports
+    output logic [7:0] txdata,
+    input logic [7:0] rxdata,
+    output logic txclk, rxclk,
+    input logic txready, rxready
+);
+    logic clk, rst;
+    assign clk = hz100;
+    assign rst = reset;
+    logic isGameComplete;
+    logic [6:0] length;
+    logic [3:0] displayOut, nextDisplayOut;
+    logic button;
+    logic [1:0] blinkToggle;
+    logic goodCollButton, badCollButton;
+    logic delayFlash;
+    // BCD conversion using BCD adders
+    logic [3:0] bcd_ones, bcd_tens, bcd_hundreds;
+    
+    
+    
+    score_posedge_detector posDetector2 (.clk(clk), .nRst(~rst), .goodColl_i(pb[0]), .badColl_i(pb[1]), .goodColl(goodCollButton), .badColl(badCollButton));
+    // Score tracker instance
+    score_tracker3 track1 (.clk(clk), .nRst(~rst), .goodColl(goodCollButton), .badColl(badCollButton), .dispScore(), .current_score(), .isGameComplete(isGameComplete), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
+
+    // Toggle Screen
+    toggle_screen toggle1(.displayOut(displayOut), .blinkToggle(blinkToggle), .clk(clk), .rst(rst), .bcd_ones(bcd_ones), .bcd_tens(bcd_tens), .bcd_hundreds(bcd_hundreds));
+    // Display BCD digits on seven-segment displays with fast blinking
+    ssdec ssdec1(.in(displayOut), .enable(blinkToggle == 1), .out(ss0[6:0]));
+    ssdec ssdec2(.in(displayOut), .enable(blinkToggle == 2), .out(ss1[6:0]));
+    ssdec ssdec3(.in(displayOut), .enable(blinkToggle == 0), .out(ss2[6:0]));
+endmodule
+
+// add badColl here to switch displays on and off if player loses
+module toggle_screen (
+    input logic clk, rst,
+    input logic [3:0] bcd_ones, bcd_tens, bcd_hundreds,
+    output logic [3:0] displayOut,
+    output logic [1:0] blinkToggle
+);
+logic [1:0] nextBlinkToggle;
+logic [3:0] nextDisplayOut;
+
+always_ff @(posedge clk or posedge rst) begin
+    if (rst) begin
+        blinkToggle <= 2'b0;
+        displayOut <= 0;
+    end else begin
+        blinkToggle <= nextBlinkToggle;
+        displayOut <= nextDisplayOut;
+    end
+end
+
+always_comb begin
+    nextBlinkToggle = 2'b0;
+    nextDisplayOut = 4'b0;
+
+    if (blinkToggle < 2'd2) begin
+        nextBlinkToggle = blinkToggle + 2'b1;
+    end else begin
+        nextBlinkToggle = 2'b0;
+    end
+    
+    if (blinkToggle == 0) begin
+        nextDisplayOut = bcd_ones;
+    end else if (blinkToggle == 1) begin
+        nextDisplayOut = bcd_tens;
+    end else begin
+        nextDisplayOut = bcd_hundreds;
+    end
+end
+endmodule
+
+module score_posedge_detector (
+    input logic clk, nRst, goodColl_i, badColl_i,
+    output logic goodColl, badColl
+);
+
+logic [1:0] N;
+logic [1:0] sig_out;
+logic [1:0] posEdge;
+
+always_ff @(posedge clk, negedge nRst) begin
+    if (~nRst) begin
+        N <= 2'b0;
+        sig_out <= 2'b0;
+    end else begin
+        N <= {goodColl_i, badColl_i};
+        sig_out <= N;
+    end
+end
+assign posEdge = N & ~sig_out;
+assign goodColl = posEdge[1];
+assign badColl = posEdge[0];
+
+endmodule
+
+module ssdec (
+input logic [3:0] in,
+input logic enable,
+output logic [6:0] out
+);
+always_comb begin
+  case(in)
+    4'b0000: begin out = 7'b0111111; end
+    4'b0001: begin out = 7'b0000110; end
+    4'b0010: begin out = 7'b1011011; end
+    4'b0011: begin out = 7'b1001111; end
+    4'b0100: begin out = 7'b1100110; end
+    4'b0101: begin out = 7'b1101101; end
+    4'b0110: begin out = 7'b1111101; end
+    4'b0111: begin out = 7'b0000111; end
+    4'b1000: begin out = 7'b1111111; end
+    4'b1001: begin out = 7'b1100111; end
+    4'b1010: begin out = 7'b1110111; end
+    4'b1011: begin out = 7'b1111100; end
+    4'b1100: begin out = 7'b0111001; end
+    4'b1101: begin out = 7'b1011110; end
+    4'b1110: begin out = 7'b1111001; end
+    4'b1111: begin out = 7'b1110001; end
+    default: begin out = '0; end
+  endcase
+    if (~enable) begin
+      out = 7'b0000000;
+    end
+end
+
+endmodule
+
 module score_tracker3(
     input logic clk, nRst, goodColl, badColl,
     output logic [7:0] current_score,
@@ -250,3 +390,8 @@ module score_tracker3(
 
     assign current_score = currScore;
 endmodule
+
+
+
+
+
