@@ -50,7 +50,7 @@ module tb_sound_generator ();
 
     // Task to check sound toggle output
     task check_dacCount;
-    input logic exp_soundOut; 
+    input logic [7:0] exp_soundOut; 
     begin
         @(negedge tb_clk);
         tb_checking_outputs = 1'b1;
@@ -92,6 +92,7 @@ module tb_sound_generator ();
         tb_rst_i = 1'b1;
         tb_goodColl = 1'b0;
         tb_badColl = 1'b0;
+        tb_direction = 4'b0;
         tb_checking_outputs = 1'b0;
         tb_test_num = -1;
         tb_test_case = "Initializing";
